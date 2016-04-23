@@ -1,0 +1,3 @@
+[submodule "displayclient/qondrite"]
+	path = displayclient/qondrite
+	url = https://github.com/achipa/qondrite
