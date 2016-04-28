@@ -19,126 +19,27 @@ from kivy.graphics import RenderContext, Fbo, Color, Rectangle, ClearBuffers, Cl
 import sys
 import json
 import time
-import numpy
 
 from MeteorClient import MeteorClient
 
-class MeteorTime:
-    def __init__(self, meteor):
-        self.meteor = meteor
-        
-        self.latency = 0
-        self.last = 0
-        self.last_time = 0
-    
-    def update(self):
-        self.start = time.time()
-        self.meteor.call('getTime', [], self.callback)
-        
-    def callback(self, error, server_now):
-        now = time.time()
-        self.latency = now - self.start
-        self.last = (server_now - self.latency / 2) * 0.001
-        self.last_time = now
-        
-    def now(self):
-        return (self.last + (time.time() - self.last_time)) * 1000
-        
-class DisplaySource(FloatLayout):
-    texture = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
-        self.canvas = RenderContext(use_parent_projection=True)
-
-        with self.canvas:
-            self.fbo = Fbo(size=Window.size, use_parent_projection=True)
-
-        super(DisplaySource, self).__init__(**kwargs)        
-            
-        self.canvas.shader.fs = open(resource_find('source.glsl')).read()
-
-        self.texture = self.fbo.texture
-        Clock.schedule_interval(self.update_glsl, 0)
-        
-    def update_glsl(self, *largs):
-        self.canvas['time'] = Clock.get_boottime()
-        self.canvas['resolution'] = [float(v) for v in self.size]
-        
-    def add_widget(self, widget):
-        c = self.canvas
-        self.canvas = self.fbo
-        super(DisplaySource, self).add_widget(widget)
-        self.canvas = c
-
-    def remove_widget(self, widget):
-        c = self.canvas
-        self.canvas = self.fbo
-        super(DisplaySource, self).remove_widget(widget)
-        self.canvas = c
-        
-class Section(Widget):
-    source = ObjectProperty(None)
-    points = ListProperty(None)
-
-    def __init__(self, **kwargs):
-        self.canvas = RenderContext(use_parent_projection=True)
-
-        super(Section, self).__init__(**kwargs)
-
-        self.canvas.shader.fs = open(resource_find('section_fragment.glsl')).read()
-        self.canvas.shader.vs = open(resource_find('section_vertex.glsl')).read()
-
-        s = Window.size
-
-        before = [
-            [-1, -1],
-            [1, -1],
-            [1, 1],
-            [-1, 1]
-        ]
-        
-        after = numpy.array(self.points)
-        
-        A = []
-        for a, b in zip(after, before):
-            A.append([
-                b[0], 0, -a[0] * b[0],
-                b[1], 0, -a[0] * b[1], 1, 0]);
-            A.append([
-                0, b[0], -a[1] * b[0],
-                0, b[1], -a[1] * b[1], 0, 1]);
-                                
-
-        A = numpy.array(A)
-
-        B = numpy.array([[c for p in self.points for c in p]])
-        B = B.transpose()
-
-        m = numpy.dot(numpy.linalg.inv(A), B)
-
-        m = m.transpose().reshape(-1,).tolist()
-                
-        matrix = Matrix()
-        matrix.set([
-            m[0], m[1],   0, m[2],
-            m[3], m[4],   0, m[5],
-               0,    0,   1,    0,
-            m[6], m[7],   0,    1
-        ])
-                
-        self.canvas['uTransformMatrix'] = matrix
-
-        quad_points = [c for p in before for c in [p[0] , p[1]]] # Bwa ha ha.
-
-        with self.canvas:
-            Quad(texture = self.source.texture, points = quad_points)
+from displayclient import MeteorTime
+from displayclient import MediaAction
+from displayclient import Section, DisplaySource
         
 class DisplayClient(App):
+    action_map = {
+        'media': MediaAction
+    }
+    
     def __init__(self, **kwargs):
         self.server = 'localhost:3000'
         self.meteor = MeteorClient('ws://{}/websocket'.format(self.server))
         self.meteor.on('connected', self.connected)
         self.meteor.connect()
+        
+        self.layers = {}
+        
+        self.time = MeteorTime(self.meteor)
     
         super(DisplayClient, self).__init__(**kwargs)
 
@@ -149,6 +50,9 @@ class DisplayClient(App):
 
     def connected(self):
         self.debug('Connected to server')
+
+        Clock.schedule_interval(self.time.update, 0.5)
+
         self._id = 'HTKBTN8i2SNQXftd4'
         self.register(None, self._id)
 
@@ -157,7 +61,7 @@ class DisplayClient(App):
         
     def prep(self, e, r):
         self.debug('Registered')
-
+        
         self.collections = 0
         self.collections_ready = 0
         self.ready = False
@@ -182,7 +86,6 @@ class DisplayClient(App):
             stage = self.meteor.find_one('stages', selector={'_id': self.minion['stage']})
             self.update_layers(stage)
             
-
     def added(self, collection, _id, fields):
         self.changed(collection, _id, fields, None)
         
@@ -201,46 +104,32 @@ class DisplayClient(App):
         layers = stage.get('layers', [])
 
         for layer, action in layers.items():
-            if action and action.get('type') == 'media' and action.get('mediatype') == 'video':
-                # TODO make this separate class
-                media = self.meteor.find_one('media', selector={'_id': action.get('media')})
-                mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
-                source = 'http://{}{}'.format(self.server, mediaurl + media['location'])
-
-                video = Video(source = source, play = True)
-                video.allow_stretch = True
-                video.keep_ratio = True
-                self.source.add_widget(video)        
-                    
-
+            if action and self.action_map.get(action['type']):
+                self.layers[layer] = self.action_map[action['type']](action, self.layers.get(layer) or None, self)
+                self.layers[layer].show()
+                
+            elif action == None and self.layers.get(layer):
+                self.layers[layer].hide()
+                self.layers[layer].remove()
+                
     def build(self):
         self.source = DisplaySource(pos=Window.size)
                     
         self.layout = FloatLayout()
         
+        
         self.section_1 = Section(
             source = self.source,
             points = [
-                [0.25, 0],
-                [1, 0],
-                [1, 0.75],
-                [0, 1]
-            ]
-        )
-
-        self.section_2 = Section(
-            source = self.source,
-            points = [
                 [-1, -1],
-                [0, -1],
-                [0, 0],
-                [-1, 0]
+                [1, -1],
+                [1, 1],
+                [-1, 1]
             ]
         )
         
         self.layout.add_widget(self.source)
         self.layout.add_widget(self.section_1)
-        self.layout.add_widget(self.section_2)
         
         return self.layout
                     
