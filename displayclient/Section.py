@@ -22,9 +22,10 @@ class Section(Widget):
 
         self.canvas.shader.fs = open(resource_find('section_fragment.glsl')).read()
         self.canvas.shader.vs = open(resource_find('section_vertex.glsl')).read()
+        
+        self.recalc()
 
-        s = Window.size
-
+    def recalc(self):
         before = [
             [-1, -1],
             [1, -1],
@@ -63,7 +64,6 @@ class Section(Widget):
                 
         self.canvas['uTransformMatrix'] = matrix
 
-        quad_points = [c for p in before for c in [p[0] , p[1]]] # Bwa ha ha.
-
+        self.canvas.clear()
         with self.canvas:
-            Quad(texture = self.source.texture, points = quad_points)
+            Rectangle(texture = self.source.texture, size = (2, 2), pos = (-1, -1))

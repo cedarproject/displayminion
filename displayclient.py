@@ -38,6 +38,10 @@ class DisplayClient(App):
         self.meteor.connect()
         
         self.layers = {}
+
+        self.sections = []
+        self.last_blocks = None
+        self.sections_changed = False
         
         self.time = MeteorTime(self.meteor)
     
@@ -81,10 +85,12 @@ class DisplayClient(App):
         if self.collections_ready >= self.collections:
             self.debug('All subscriptions ready')
             self.minion = self.meteor.find_one('minions', selector={'_id': self._id});
+            self.update_minion_settings(self.minion)
+
             self.ready = True
             
-            stage = self.meteor.find_one('stages', selector={'_id': self.minion['stage']})
-            self.update_layers(stage)
+            self.stage = self.meteor.find_one('stages', selector={'_id': self.minion['stage']})
+            Clock.create_trigger(self.update_layers)()
             
     def added(self, collection, _id, fields):
         self.changed(collection, _id, fields, None)
@@ -94,14 +100,51 @@ class DisplayClient(App):
         
         if collection == 'minions' and _id == self._id:
             self.minion = self.meteor.find_one('minions', selector={'_id': self._id});
-            # TODO also update Sections, etc.
+            self.update_minion_settings(self.minion)
         
         if collection == 'stages' and _id == self.minion['stage']:
-            stage = self.meteor.find_one('stages', selector={'_id': self.minion['stage']})
-            self.update_layers(stage)
+            self.stage = self.meteor.find_one('stages', selector={'_id': self.minion['stage']})
+            Clock.create_trigger(self.update_layers)()
+            
+    def update_minion_settings(self, minion):
+        if not minion['settings']['blocks'] == self.last_blocks:
+            self.last_blocks = minion['settings']['blocks']
+            self.sections_changed = True
+        
+    def update_minion_blocks(self, dt):
+        if not self.sections_changed: return
+        self.sections_changed = False
     
-    def update_layers(self, stage):
-        layers = stage.get('layers', [])
+        # Note: Sections were originally named "blocks", so far I've been to lazy to rewrite all the cedarserver code to reflect the new name. -IHS
+        start_length = len(self.sections)
+        block_delta = len(self.minion['settings']['blocks']) - start_length
+
+        if block_delta > 0:
+            for n in range(block_delta):
+                config = self.minion['settings']['blocks'][start_length + n]
+                
+                section = Section(
+                    source = self.source,
+                    points = config['points']
+                    # TODO add brightess/width/height/x/y
+                )
+                
+                self.layout.add_widget(section)
+                self.sections.append(section)
+                
+        elif block_delta < 0:
+            for n in range(abs(block_delta)):
+                section = self.sections.pop()
+                self.layout.remove_widget(section)
+        
+        for index, section in enumerate(self.sections):
+            config = self.minion['settings']['blocks'][index]
+            if not section.points == config['points']: # TODO add brightness etc.
+                section.points = config['points']
+                section.recalc()
+    
+    def update_layers(self, dt = None):
+        layers = self.stage.get('layers', [])
 
         for layer, action in layers.items():
             if action and self.action_map.get(action['type']):
@@ -114,22 +157,10 @@ class DisplayClient(App):
                 
     def build(self):
         self.source = DisplaySource(pos=Window.size)
-                    
         self.layout = FloatLayout()
-        
-        
-        self.section_1 = Section(
-            source = self.source,
-            points = [
-                [-1, -1],
-                [1, -1],
-                [1, 1],
-                [-1, 1]
-            ]
-        )
-        
         self.layout.add_widget(self.source)
-        self.layout.add_widget(self.section_1)
+        
+        Clock.schedule_interval(self.update_minion_blocks, 0.1)
         
         return self.layout
                     
