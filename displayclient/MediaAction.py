@@ -55,6 +55,7 @@ class MediaAction(Action):
             self.video.volume = val
 
         elif self.audio:
+            print('setting audio volume', val)
             self.audio.volume = val
             
         elif self.image:
@@ -88,7 +89,6 @@ class MediaAction(Action):
             
         elif self.audio:
             self.audio.play()
-            print('audio playing')
             
         elif self.image:
             self.client.source.add_widget(self.image)

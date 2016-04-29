@@ -12,25 +12,29 @@ class DisplaySource(FloatLayout):
     texture = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        self.canvas = RenderContext(use_parent_projection=True)
+        self.sections = []
 
+        self.canvas = RenderContext(use_parent_projection = True)
         with self.canvas:
-            self.fbo = Fbo(size=Window.size, use_parent_projection=True)
+            self.fbo = Fbo(size = Window.size, use_parent_projection = True)
         
         with self.fbo:
             Color(0, 0, 0, 1)
-            Rectangle(size=Window.size)
+            self.fbo_rect = Rectangle(size = Window.size)
 
         super(DisplaySource, self).__init__(**kwargs)        
             
-        self.canvas.shader.fs = open(resource_find('source.glsl')).read()
-
         self.texture = self.fbo.texture
-        Clock.schedule_interval(self.update_glsl, 0)
         
-    def update_glsl(self, *largs):
-        self.canvas['time'] = Clock.get_boottime()
-        self.canvas['resolution'] = [float(v) for v in self.size]
+        Window.bind(on_resize = self.resize)
+        
+    def resize(self, window, width, height):
+        self.fbo.size = Window.size
+        self.texture = self.fbo.texture
+        self.fbo_rect.size = Window.size
+        
+        for section in self.sections:
+            section.rect.texture = self.texture
         
     def add_widget(self, widget):
         c = self.canvas

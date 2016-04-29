@@ -17,11 +17,13 @@ class Section(Widget):
 
     def __init__(self, **kwargs):
         self.canvas = RenderContext(use_parent_projection=True)
-
+        
         super(Section, self).__init__(**kwargs)
 
-        self.canvas.shader.fs = open(resource_find('section_fragment.glsl')).read()
-        self.canvas.shader.vs = open(resource_find('section_vertex.glsl')).read()
+        self.source.sections.append(self)
+
+        self.canvas.shader.fs = open(resource_find('shaders/section_fragment.glsl')).read()
+        self.canvas.shader.vs = open(resource_find('shaders/section_vertex.glsl')).read()
         
         self.recalc()
 
@@ -66,4 +68,4 @@ class Section(Widget):
 
         self.canvas.clear()
         with self.canvas:
-            Rectangle(texture = self.source.texture, size = (2, 2), pos = (-1, -1))
+            self.rect = Rectangle(texture = self.source.texture, size = (2, 2), pos = (-1, -1))
