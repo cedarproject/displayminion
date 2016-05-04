@@ -1,6 +1,9 @@
 import kivy
 kivy.require('1.9.0')
 
+from kivy.config import Config
+Config.set('kivy', 'log_level', 'none')
+
 from kivy.clock import Clock
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
@@ -17,14 +20,19 @@ import time
 from MeteorClient import MeteorClient
 
 from .MeteorTime import MeteorTime
-from .MediaAction import MediaAction
 from .Section import Section
 from .DisplaySource import DisplaySource
 from .UserInterface import UserInterface
 
+from .Action import Action
+from .MediaAction import MediaAction
+from .SongAction import SongAction
+
 class DisplayClient(App):
     action_map = {
-        'media': MediaAction
+        'media': MediaAction,
+        'song': SongAction,
+        'clear-layer': Action
     }
     
     def __init__(self, **kwargs):
@@ -83,7 +91,7 @@ class DisplayClient(App):
         self.collections = 0
         self.collections_ready = 0
 
-        for collection in ['settings', 'stages', 'minions', 'media']:
+        for collection in ['settings', 'stages', 'minions', 'media', 'songs', 'songarrangements', 'songsections']:
             #TODO add all subscriptions
             self.collections += 1
             self.meteor.subscribe(collection, callback=self.subscription_ready)
@@ -178,6 +186,28 @@ class DisplayClient(App):
         layers = self.stage.get('layers', [])
 
         for layer, action in layers.items():
+            if not layer in self.minion['layers']: continue
+        
+            if action and self.layers.get(layer):
+                # Test if new action is the same as the current one
+                current = self.layers.get(layer).action
+
+                if action['_id'] == current['_id']:
+                    if action['type'] == 'song':
+                        if action.get('args') and current.get('args') and \
+                           action['args']['section'] == current['args']['section'] and \
+                           action['args']['index'] == current['args']['index']:
+                            print(action['args'], current['args'])
+                            continue
+                    
+                    elif action['type'] == 'presentation':
+                        if action.get('args') and current.get('args') and \
+                           action['args']['order'] == current['args']['order'] and \
+                           action['args']['fillin'] == current['args']['fillin']:
+                            continue
+                            
+                    else: continue
+            
             if action and self.action_map.get(action['type']):
                 self.layers[layer] = self.action_map[action['type']](action, self.layers.get(layer) or None, self)
                 self.layers[layer].show()
@@ -185,7 +215,28 @@ class DisplayClient(App):
             elif action == None and self.layers.get(layer):
                 self.layers[layer].hide()
                 self.layers[layer].remove()
+                self.layers[layer] = None
                 
+    def get_widget_index(self, action):
+        layers = self.stage['settings']['layers']
+        layer_index = layers.index(action.layer)
+
+        higher_layers = layers[layer_index + 1:]
+        widget_index = 0
+
+        for layer in higher_layers:
+            higher_action = self.layers.get(layer)
+ 
+            if higher_action:
+                higher_index = higher_action.get_current_widget_index()
+                
+                if not higher_index == None:
+                    print(higher_index, self.source.children)
+                    widget_index = higher_index + 1
+                    break
+                
+        return widget_index
+        
     def build(self):
         self.source = DisplaySource(pos=Window.size)
 

@@ -22,7 +22,7 @@ class DisplaySource(FloatLayout):
             Color(0, 0, 0, 1)
             self.fbo_rect = Rectangle(size = Window.size)
 
-        super(DisplaySource, self).__init__(**kwargs)        
+        super(DisplaySource, self).__init__(**kwargs)
             
         self.texture = self.fbo.texture
         
@@ -36,16 +36,16 @@ class DisplaySource(FloatLayout):
         for section in self.sections:
             section.rect.texture = self.texture
         
-    def add_widget(self, widget):
+    def add_widget(self, *args, **kwargs):
         c = self.canvas
         self.canvas = self.fbo
-        super(DisplaySource, self).add_widget(widget)
+        super(DisplaySource, self).add_widget(*args, **kwargs)
         self.canvas = c
 
-    def remove_widget(self, widget):
+    def remove_widget(self, *args, **kwargs):
         c = self.canvas
         self.canvas = self.fbo
-        super(DisplaySource, self).remove_widget(widget)
+        super(DisplaySource, self).remove_widget(*args, **kwargs)
         self.canvas = c
         
 

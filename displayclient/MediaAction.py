@@ -11,8 +11,6 @@ from kivy.graphics import RenderContext, Fbo, Color, Rectangle
 from .Action import Action
 from .Fade import Fade
 
-# Widget layers can work by using the index param of add_widget TODO
-
 class MediaAction(Action):
     def __init__(self, action, old_action, client):
         super(MediaAction, self).__init__(action, old_action, client)
@@ -22,6 +20,7 @@ class MediaAction(Action):
         self.settings = self.combine_settings(self.client.minion.get('settings'), self.media.get('settings'), self.settings)
         
         self.fade_length = float(self.settings.get('media_fade', 1))
+        self.fade_val = 0
         
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
         self.sourceurl = 'http://{}{}'.format(self.client.server, mediaurl + self.media['location'])
@@ -49,13 +48,24 @@ class MediaAction(Action):
             
             self.image.opacity = 0
             
+    def get_current_widget_index(self):
+        if self.shown:
+            if self.video:
+                return self.client.source.children.index(self.video)
+
+            elif self.image:
+                return self.client.source.children.index(self.image)
+            
+        return None
+            
     def fade_tick(self, val):
+        self.fade_val = val
+
         if self.video:
             self.video.opacity = val
             self.video.volume = val
 
         elif self.audio:
-            print('setting audio volume', val)
             self.audio.volume = val
             
         elif self.image:
@@ -85,15 +95,17 @@ class MediaAction(Action):
     def on_show(self, fade_start, fade_end):
         if self.video:
             self.video.play = True
-            self.client.source.add_widget(self.video)
+            self.client.source.add_widget(self.video, index = self.client.get_widget_index(self))
             
         elif self.audio:
             self.audio.play()
             
         elif self.image:
-            self.client.source.add_widget(self.image)
-        
-        self.fades.append(Fade(self.client.time, 0, 1, fade_start, fade_end, self.fade_tick, None))
+            self.client.source.add_widget(self.image, index = self.client.get_widget_index(self))
+            
+        if self.fade: self.fade.stop()
+        self.fade = Fade(self.client.time, self.fade_val, 1, fade_start, fade_end, self.fade_tick, None)
         
     def on_hide(self, fade_start, fade_end):
-        self.fades.append(Fade(self.client.time, 1, 0, fade_start, fade_end, self.fade_tick, self.fade_out_end))
+        if self.fade: self.fade.stop()
+        self.fade = Fade(self.client.time, self.fade_val, 0, fade_start, fade_end, self.fade_tick, self.fade_out_end)

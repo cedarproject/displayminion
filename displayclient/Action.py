@@ -19,17 +19,18 @@ class Action:
         self.meteor = self.client.meteor
         self.time = self.client.time
         
-        self.settings = action['settings']
+        self.layer = self.action['layer']
         
-        self.fade_length = 0
+        self.settings = action.get('settings', {})
+        self.args = action.get('args', {})
+        
+        self.fade_length = False
         
         self.ready = False
         self.shown = False
         self.removed = False
         
-        self.fades = []
-        
-        Clock.schedule_once(self.tick, 0)
+        self.fade = None        
             
     def combine_settings(self, *args):
         result = {}
@@ -37,17 +38,21 @@ class Action:
             if type(arg) == dict: result.update(arg)
             
         return result
-            
-    def tick(self, dt):
-        if not self.removed:
-            Clock.schedule_once(self.tick, 0)
-
-            for fade in self.fades[:]:
-                fade.tick()
-                if fade.finished: self.fades.remove(fade)
                             
     def check_ready(self):
         return True
+        
+    def get_fade_start_end(self):
+        if self.fade_length == None:
+            return self.time.now(), self.time.now() + (self.old_action.fade_length or 0)
+        else:
+            return self.time.now(), self.time.now() + self.fade_length
+        
+    def remove_old(self, fade_start, fade_end):
+        if self.old_action:        
+            self.old_action.hide(fade_start, fade_end)
+            self.old_action.remove()
+            self.old_action = None        
                 
     def show(self):
         self.ready = self.check_ready()
@@ -55,20 +60,14 @@ class Action:
         if self.ready:
             self.shown = True
             
-            fade_start = self.time.now()
-            fade_end = fade_start + self.fade_length
+            fade_start, fade_end = self.get_fade_start_end()
             
-            if self.old_action:
-                self.old_action.hide(fade_start, fade_end)
-                self.old_action.remove()
-                self.old_action = None
-                
+            self.remove_old(fade_start, fade_end)
             self.on_show(fade_start, fade_end)
             
         else:
             if self.old_action and self.time.now() - self.action['time'] / 1000.0 > fade_old_max_wait:
-                fade_start = self.time.now()
-                fade_end = fade_start + self.fade_length
+                fade_start, fade_end = self.get_fade_start_end()
                 
                 self.old_action.hide(fade_start, fade_end)
                 self.old_action.remove()

@@ -1,3 +1,5 @@
+from kivy.clock import Clock
+
 class Fade:
     def __init__(self, time, start_val, end_val, start_time, end_time, fade_callback, end_callback):
         self.time = time
@@ -13,10 +15,13 @@ class Fade:
         
         self.fade_callback = fade_callback
         self.end_callback = end_callback
+                
+        Clock.schedule_once(self.tick, 0)
         
-        self.finished = False
+    def stop(self):
+        Clock.unschedule(self.tick)
         
-    def tick(self):
+    def tick(self, dt):
         curr_time = self.time.now()
         if curr_time < self.start_time: return
         
@@ -36,5 +41,7 @@ class Fade:
         self.fade_callback(self.curr_val)
         
         if self.curr_val == self.end_val:
-            self.finished = True
             if self.end_callback: self.end_callback()
+
+        else:
+            Clock.schedule_once(self.tick, 0)
