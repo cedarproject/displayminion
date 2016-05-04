@@ -1,8 +1,10 @@
 import kivy
 kivy.require('1.9.0')
 
+import kivy.utils
+
 from kivy.config import Config
-Config.set('kivy', 'log_level', 'none')
+Config.set('kivy', 'log_level', 'info')
 
 from kivy.clock import Clock
 from kivy.app import App
@@ -236,8 +238,25 @@ class DisplayMinion(App):
                     break
                 
         return widget_index
+
+    def get_application_config(self):
+        return super(DisplayMinion, self).get_application_config('~/.%(appname)s.ini')
+
+    def build_config(self, config):
+        config.setdefaults('connection', {
+            'server': 'localhost:3000',
+            '_id': '',
+            'autoconnect': False
+        })
         
     def build(self):
+        self.title = 'Cedar Display Client'
+        
+        if kivy.utils.platform is 'windows':
+            self.icon = 'logo/logo-128x128.png'
+        else:
+            self.icon = 'logo/logo-1024x1024.png'
+
         self.source = DisplaySource(pos=Window.size)
 
         self.layout = FloatLayout()
