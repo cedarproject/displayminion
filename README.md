@@ -1,2 +1,2 @@
-# Display Client
-Cedar Display Client - Display media, presentations, and song lyrics from a Cedar server
+# Display Minion
+Cedar Display Minion - Display media, presentations, and song lyrics from a Cedar server
