@@ -1,6 +1,10 @@
+media_sync_interval = 0.25
+media_sync_tolerance = 0.1
+
 import kivy
 kivy.require('1.9.0')
 
+from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.uix.image import AsyncImage
 from kivy.uix.video import Video
@@ -16,6 +20,7 @@ class MediaAction(Action):
         super(MediaAction, self).__init__(action, old_action, client)
 
         self.media = self.meteor.find_one('media', selector={'_id': action.get('media')})
+        self.duration = float(self.media['duration'])
         
         self.settings = self.combine_settings(self.client.minion.get('settings'), self.media.get('settings'), self.settings)
         
@@ -28,23 +33,32 @@ class MediaAction(Action):
         self.video = None
         self.audio = None
         self.image = None
+        
+        self.to_sync = None
 
         if self.media['type'] == 'video':
             self.video = Video(source = self.sourceurl)
+            self.to_sync = self.video
             self.video.allow_stretch = True
-    #        self.video.keep_ratio = True
+            
+            if self.settings.get('media_preserve_aspect') == 'no':
+                self.video.keep_ratio = False
 
             self.video.opacity = 0
-            self.video.volume = 0
-            self.video.play = True # Convince video to preload itself TODO find better way
-
+            self.video.volume = 0            
+            self.video.state = 'play' # Convince video to preload itself - TODO find better way
+            
         elif self.media['type'] == 'audio':
             self.audio = SoundLoader.load(self.sourceurl)
+            self.to_sync = self.audio
             self.audio.volume = 0
         
         elif self.media['type'] == 'image':
             self.image = AsyncImage(source = self.sourceurl)
             self.image.allow_stretch = True
+
+            if self.settings.get('media_preserve_aspect') == 'no':
+                self.image.keep_ratio = False
             
             self.image.opacity = 0
             
@@ -57,6 +71,31 @@ class MediaAction(Action):
                 return self.client.source.children.index(self.image)
             
         return None
+        
+    def get_media_time(self):
+        diff = self.client.time.now() - float(self.action['time'])
+
+        if diff > 0 and self.settings.get('media_loop') == 'yes':
+            diff = diff % self.duration
+        
+        if diff > self.duration: diff = self.duration
+        
+        print(diff, self.duration)
+        return diff
+        
+    def media_sync(self, dt = None):
+        if self.shown:
+            if self.video: pos = self.video.position
+            elif self.audio: pos = self.audio.get_pos()
+                
+            if self.to_sync and abs(self.get_media_time() - pos) > media_sync_tolerance:
+                if self.settings.get('media_loop') == 'no' and pos > self.duration:
+                    if self.video: self.to_sync.state = 'stop'
+                    elif self.audio: self.audio.stop()
+                else:
+                    self.to_sync.seek(self.get_media_time())
+                
+            Clock.schedule_once(self.media_sync, media_sync_interval)
             
     def fade_tick(self, val):
         self.fade_val = val
@@ -75,26 +114,28 @@ class MediaAction(Action):
         self.shown = False
         
         if self.video:
-            self.video.play = False
+            self.video.state = 'pause'
             self.client.source.remove_widget(self.video)
             
         elif self.audio:
             self.audio.stop()
         
     def check_ready(self):
-        if self.video and self.video.loaded:
-            self.video.seek(0)
-            return True
+        if self.get_media_time() >= 0:
+            if self.video and self.video.loaded:
+                return True
 
-        elif self.audio:
-            return True
-            
-        elif self.image and self.image._coreimage.loaded:
-            return True
+            elif self.audio:
+                return True
+                
+            elif self.image and self.image._coreimage.loaded:
+                return True
         
     def on_show(self, fade_start, fade_end):
+        self.media_sync()
+
         if self.video:
-            self.video.play = True
+            self.video.state = 'play'
             self.client.source.add_widget(self.video, index = self.client.get_widget_index(self))
             
         elif self.audio:

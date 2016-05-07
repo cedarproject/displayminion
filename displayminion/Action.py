@@ -4,11 +4,6 @@ import kivy
 kivy.require('1.9.0')
 
 from kivy.clock import Clock
-from kivy.uix.image import Image
-from kivy.uix.video import Video
-from kivy.core.window import Window
-from kivy.properties import StringProperty, ObjectProperty, ListProperty
-from kivy.graphics import RenderContext, Fbo, Color, Rectangle
 
 class Action:
     def __init__(self, action, old_action, client):

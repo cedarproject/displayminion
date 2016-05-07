@@ -39,7 +39,7 @@ class DisplayMinion(App):
     
     def __init__(self, **kwargs):
         self._id = None
-        self.server = 'localhost:3000'
+        self.server = None
         self.ready = False
 
         self.state = 'disconnected' # 'disconnected' => 'connecting' => 'connected' => 'registering' => 'registered'
@@ -246,7 +246,7 @@ class DisplayMinion(App):
         config.setdefaults('connection', {
             'server': 'localhost:3000',
             '_id': '',
-            'autoconnect': False
+            'autoconnect': 'no'
         })
         
     def build(self):
