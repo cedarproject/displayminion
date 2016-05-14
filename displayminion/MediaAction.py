@@ -1,5 +1,5 @@
 media_sync_interval = 0.25
-media_sync_tolerance = 0.1
+media_sync_tolerance = 5 # TODO reduce this once kivy has playback speed support!
 
 import kivy
 kivy.require('1.9.0')
@@ -16,10 +16,10 @@ from .Action import Action
 from .Fade import Fade
 
 class MediaAction(Action):
-    def __init__(self, action, old_action, client):
-        super(MediaAction, self).__init__(action, old_action, client)
+    def __init__(self, *args, **kwargs):
+        super(MediaAction, self).__init__(*args, **kwargs)
 
-        self.media = self.meteor.find_one('media', selector={'_id': action.get('media')})
+        self.media = self.meteor.find_one('media', selector={'_id': self.action.get('media')})
         self.duration = float(self.media['duration'])
         
         self.settings = self.combine_settings(self.client.minion.get('settings'), self.media.get('settings'), self.settings)
@@ -41,6 +41,9 @@ class MediaAction(Action):
             self.to_sync = self.video
             self.video.allow_stretch = True
             
+            if self.settings.get('media_loop') == 'yes':
+                self.video.loop = True
+            
             if self.settings.get('media_preserve_aspect') == 'no':
                 self.video.keep_ratio = False
 
@@ -51,7 +54,12 @@ class MediaAction(Action):
         elif self.media['type'] == 'audio':
             self.audio = SoundLoader.load(self.sourceurl)
             self.to_sync = self.audio
+
+            if self.settings.get('media_loop') == 'yes':
+                self.audio.loop = True
+
             self.audio.volume = 0
+
         
         elif self.media['type'] == 'image':
             self.image = AsyncImage(source = self.sourceurl)
@@ -80,7 +88,6 @@ class MediaAction(Action):
         
         if diff > self.duration: diff = self.duration
         
-        print(diff, self.duration)
         return diff
         
     def media_sync(self, dt = None):
@@ -93,6 +100,7 @@ class MediaAction(Action):
                     if self.video: self.to_sync.state = 'stop'
                     elif self.audio: self.audio.stop()
                 else:
+                    print('seek', pos, self.get_media_time())
                     self.to_sync.seek(self.get_media_time())
                 
             Clock.schedule_once(self.media_sync, media_sync_interval)

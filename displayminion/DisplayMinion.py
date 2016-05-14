@@ -4,7 +4,7 @@ kivy.require('1.9.0')
 import kivy.utils
 
 from kivy.config import Config
-Config.set('kivy', 'log_level', 'info')
+Config.set('kivy', 'log_level', 'debug')
 
 from kivy.clock import Clock
 from kivy.app import App
@@ -29,11 +29,13 @@ from .UserInterface import UserInterface
 from .Action import Action
 from .MediaAction import MediaAction
 from .SongAction import SongAction
+from .PresentationAction import PresentationAction
 
 class DisplayMinion(App):
     action_map = {
         'media': MediaAction,
         'song': SongAction,
+        'presentation': PresentationAction,
         'clear-layer': Action
     }
     
@@ -93,7 +95,10 @@ class DisplayMinion(App):
         self.collections = 0
         self.collections_ready = 0
 
-        for collection in ['settings', 'stages', 'minions', 'media', 'songs', 'songarrangements', 'songsections']:
+        for collection in ['settings', 'stages', 'minions', 'media',
+                           'songs', 'songarrangements', 'songsections',
+                           'presentations', 'presentationslides']:
+
             #TODO add all subscriptions
             self.collections += 1
             self.meteor.subscribe(collection, callback=self.subscription_ready)

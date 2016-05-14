@@ -1,6 +1,3 @@
-import kivy
-kivy.require('1.9.0')
-
 import kivy.core.text
 from kivy.uix.label import Label
 from kivy.core.window import Window
@@ -13,8 +10,8 @@ from .Action import Action
 from .Fade import Fade
 
 class SongAction(Action):
-    def __init__(self, action, old_action, client):
-        super(SongAction, self).__init__(action, old_action, client)
+    def __init__(self, *args, **kwargs):
+        super(SongAction, self).__init__(*args, **kwargs)
         
         self.song = self.meteor.find_one('songs', selector = {'_id': self.action['song']})
         self.arrangement = self.meteor.find_one('songarrangements', selector = {'_id': self.settings['arrangement']})
@@ -50,7 +47,7 @@ class SongAction(Action):
         self.label.opacity = 0
         
     def get_current_widget_index(self):
-        if self.shown:
+        if self.shown and not self.blank:
             return self.client.source.children.index(self.label)
             
     def fade_tick(self, val):
