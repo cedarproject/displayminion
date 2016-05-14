@@ -13,7 +13,7 @@ class PresentationRenderer(mistune.Renderer):
         return '{}\n'.format(text)
         
     def header(self, text, level, raw = None):
-        size = float(self.settings.get('presentations_font_size', 2)) # TODO actual defaults!
+        size = float(self.settings.get('presentations_font_size'))
         if level == 1: size *= 2
         elif level == 2: size *= 1.5
         elif level == 3: size *= 1.17

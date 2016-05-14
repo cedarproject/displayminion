@@ -1,3 +1,6 @@
 [submodule "displayclient/qondrite"]
 	path = displayclient/qondrite
 	url = https://github.com/achipa/qondrite
+[submodule "common"]
+	path = common
+	url = https://github.com/cedarsuite/common

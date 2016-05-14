@@ -53,6 +53,8 @@ class DisplayMinion(App):
         self.last_blocks = None
         self.sections_changed = False
         
+        self.defaults = json.load(open('common/default_settings.json'))
+        
         super(DisplayMinion, self).__init__(**kwargs)
 
     def debug(self, *args):

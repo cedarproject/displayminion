@@ -18,9 +18,8 @@ class SongAction(Action):
         
         self.settings = self.combine_settings(self.client.minion.get('settings'), self.song.get('settings'), self.settings)
         
-        # TODO better fade defaults
         # TODO if old action is song and it's text is same as current, set fade to 0
-        self.fade_length = float(self.settings.get('songs_fade', 0.25))
+        self.fade_length = float(self.settings.get('songs_fade'))
         self.fade_val = 0
         
         self.blank = False

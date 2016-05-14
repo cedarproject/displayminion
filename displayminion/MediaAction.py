@@ -24,7 +24,7 @@ class MediaAction(Action):
         
         self.settings = self.combine_settings(self.client.minion.get('settings'), self.media.get('settings'), self.settings)
         
-        self.fade_length = float(self.settings.get('media_fade', 1))
+        self.fade_length = float(self.settings.get('media_fade'))
         self.fade_val = 0
         
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']

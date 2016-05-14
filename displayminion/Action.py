@@ -16,7 +16,7 @@ class Action:
         
         self.layer = self.action['layer']
         
-        self.settings = action.get('settings', {})
+        self.settings = self.combine_settings(action.get('settings'), self.client.defaults)
         self.args = action.get('args', {})
         
         self.fade_length = False
