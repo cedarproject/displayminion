@@ -5,7 +5,10 @@ class PresentationRenderer(mistune.Renderer):
     def __init__(self, *args, **kwargs):
         # TODO font etc. settings
         self.settings = kwargs['settings']
-        del kwargs['settings']
+        self.args = kwargs['args']
+        del kwargs['settings'], kwargs['args']
+        
+        self.fillin = 0
 
         super(PresentationRenderer, self).__init__(*args, **kwargs)
     
@@ -21,14 +24,13 @@ class PresentationRenderer(mistune.Renderer):
         return '[size={}]{}[/size]\n'.format(str(round(size)), text)
         
     def list(self, body, ordered = True):
-        # TODO settings for list indent size?
         lines = body.split('\n')
         output = ''
         
         for line, n in zip(lines, enumerate(lines)):
-            if ordered:
+            if ordered and len(line) > 0:
                 output += '    {}. {}\n'.format(str(n + 1), line)
-            else:
+            elif len(line) > 0:
                 output += '    • {}\n'.format(line)
 
         return output
@@ -38,9 +40,12 @@ class PresentationRenderer(mistune.Renderer):
         
     def codespan(self, text):
         # Cedar hijacks inline code spans for its fill-in-the-blank feature
-        # TODO fill-in-the-blank!
+        self.fillin += 1
         
-        return '`{}`'.format(text)
+        if self.args['fillin'] >= self.fillin:
+            return text
+        else:
+            return ''
     
     def emphasis(self, text):
         return '[i]{}[/i]'.format(text)

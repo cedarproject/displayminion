@@ -23,7 +23,9 @@ class Fade:
         
     def tick(self, dt):
         curr_time = self.time.now()
-        if curr_time < self.start_time: return
+        if curr_time < self.start_time:
+            Clock.schedule_once(self.tick, 0)
+            return
         
         elapsed = curr_time - self.start_time
         
@@ -32,7 +34,6 @@ class Fade:
             except ZeroDivisionError: self.curr_val = self.end_val
             if self.curr_val > self.end_val: self.curr_val = self.end_val
 
-        # TODO figure out why fades from 1 to 0 go up instead of down
         elif self.curr_val > self.end_val:
             try: self.curr_val = self.end_val + (self.start_val - self.end_val) / (self.length / (self.length - elapsed))
             except ZeroDivisionError: self.curr_val = self.end_val

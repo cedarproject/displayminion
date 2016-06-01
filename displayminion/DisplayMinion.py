@@ -31,6 +31,8 @@ from .MediaAction import MediaAction
 from .SongAction import SongAction
 from .PresentationAction import PresentationAction
 
+# TODO implement stuff from https://kivy.org/planet/2011/05/kivy-window-management-on-x11/ to make window fullscreen, optionally on multiple monitors
+
 class DisplayMinion(App):
     action_map = {
         'media': MediaAction,
@@ -51,7 +53,6 @@ class DisplayMinion(App):
 
         self.sections = []
         self.last_blocks = None
-        self.sections_changed = False
         
         self.defaults = json.load(open('common/default_settings.json'))
         
@@ -135,7 +136,7 @@ class DisplayMinion(App):
         self.update_minion_settings(self.minion)
 
         Clock.create_trigger(self.update_layers)()
-        Clock.schedule_interval(self.update_minion_blocks, 0.1)
+        Clock.schedule_once(self.update_minion_blocks, 0)
         
         self.ready = True
             
@@ -156,12 +157,9 @@ class DisplayMinion(App):
     def update_minion_settings(self, minion):
         if not minion['settings']['blocks'] == self.last_blocks:
             self.last_blocks = minion['settings']['blocks']
-            self.sections_changed = True
+            Clock.schedule_once(self.update_minion_blocks, 0)
         
     def update_minion_blocks(self, dt):
-        if not self.sections_changed: return
-        self.sections_changed = False
-    
         # Note: Sections were originally named "blocks", so far I've been to lazy to rewrite all the cedarserver code to reflect the new name. -IHS
         start_length = len(self.sections)
         block_delta = len(self.minion['settings']['blocks']) - start_length
@@ -206,7 +204,6 @@ class DisplayMinion(App):
                         if action.get('args') and current.get('args') and \
                            action['args']['section'] == current['args']['section'] and \
                            action['args']['index'] == current['args']['index']:
-                            print(action['args'], current['args'])
                             continue
                     
                     elif action['type'] == 'presentation':
@@ -225,10 +222,11 @@ class DisplayMinion(App):
                 self.layers[layer].hide()
                 self.layers[layer].remove()
                 self.layers[layer] = None
+            
                 
-    def get_widget_index(self, action):
+    def get_layer_index(self, target_layer):
         layers = self.stage['settings']['layers']
-        layer_index = layers.index(action.layer)
+        layer_index = layers.index(target_layer)
 
         higher_layers = layers[layer_index + 1:]
         widget_index = 0
@@ -240,11 +238,31 @@ class DisplayMinion(App):
                 higher_index = higher_action.get_current_widget_index()
                 
                 if not higher_index == None:
-                    print(higher_index, self.source.children)
                     widget_index = higher_index + 1
                     break
                 
         return widget_index
+        
+
+    def add_layer_widget(self, new_widget, layer):
+        # TODO switch to this behavior once https://github.com/kivy/kivy/issues/4293 is resolved
+        # self.source.add_widget(widget, index = self.get_layer_index(layer))
+        
+        widgets = self.source.children[:]
+        new_index = self.get_layer_index(layer)
+        
+        for widget in widgets:
+            self.source.remove_widget(widget)
+        
+        widgets.insert(new_index, new_widget)
+        widgets.reverse()
+        
+        for widget in widgets:
+            self.source.add_widget(widget)
+
+    
+    def remove_widget(self, widget):
+        self.source.remove_widget(widget)
 
     def get_application_config(self):
         return super(DisplayMinion, self).get_application_config('~/.%(appname)s.ini')
@@ -264,7 +282,7 @@ class DisplayMinion(App):
         else:
             self.icon = 'logo/logo-1024x1024.png'
 
-        self.source = DisplaySource(pos=Window.size)
+        self.source = DisplaySource(pos_hint = {'x': 1, 'y': 1})
 
         self.layout = FloatLayout()
         self.layout.add_widget(self.source)

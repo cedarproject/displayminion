@@ -16,7 +16,7 @@ class Action:
         
         self.layer = self.action['layer']
         
-        self.settings = self.combine_settings(action.get('settings'), self.client.defaults)
+        self.settings = self.combine_settings(self.client.defaults, self.action.get('settings'))
         self.args = action.get('args', {})
         
         self.fade_length = False
@@ -33,6 +33,9 @@ class Action:
             if type(arg) == dict: result.update(arg)
             
         return result
+        
+    def get_current_widget_index(self):
+        return
                             
     def check_ready(self):
         return True

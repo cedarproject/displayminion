@@ -1,5 +1,5 @@
 media_sync_interval = 0.25
-media_sync_tolerance = 5 # TODO reduce this once kivy has playback speed support!
+media_sync_tolerance = 0.1
 
 import kivy
 kivy.require('1.9.0')
@@ -12,6 +12,8 @@ from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 from kivy.graphics import RenderContext, Fbo, Color, Rectangle
 
+from kivy.uix.label import Label
+
 from .Action import Action
 from .Fade import Fade
 
@@ -22,11 +24,15 @@ class MediaAction(Action):
         self.media = self.meteor.find_one('media', selector={'_id': self.action.get('media')})
         self.duration = float(self.media['duration'])
         
-        self.settings = self.combine_settings(self.client.minion.get('settings'), self.media.get('settings'), self.settings)
+        self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'), self.media.get('settings'), self.action.get('settings'))
         
         self.fade_length = float(self.settings.get('media_fade'))
         self.fade_val = 0
         
+        self.max_volume = min(float(self.settings.get('media_volume')), 1.0)
+        self.minion_volume = min(float(self.settings.get('mediaminion_volume')), 1.0)
+        
+        # TODO autodetect HTTP/HTTPS, other protocols?
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
         self.sourceurl = 'http://{}{}'.format(self.client.server, mediaurl + self.media['location'])
         
@@ -42,7 +48,9 @@ class MediaAction(Action):
             self.video.allow_stretch = True
             
             if self.settings.get('media_loop') == 'yes':
-                self.video.loop = True
+                # TODO get loop working properly
+#                self.video.options = {'loop': True}
+                self.video.bind(on_eos = lambda i, v: i.seek(0))
             
             if self.settings.get('media_preserve_aspect') == 'no':
                 self.video.keep_ratio = False
@@ -59,7 +67,6 @@ class MediaAction(Action):
                 self.audio.loop = True
 
             self.audio.volume = 0
-
         
         elif self.media['type'] == 'image':
             self.image = AsyncImage(source = self.sourceurl)
@@ -100,20 +107,20 @@ class MediaAction(Action):
                     if self.video: self.to_sync.state = 'stop'
                     elif self.audio: self.audio.stop()
                 else:
-                    print('seek', pos, self.get_media_time())
                     self.to_sync.seek(self.get_media_time())
-                
-            Clock.schedule_once(self.media_sync, media_sync_interval)
+            
+            # Automatic sync disabled until Kivy playback rate change is implemented
+            #Clock.schedule_once(self.media_sync, media_sync_interval)
             
     def fade_tick(self, val):
         self.fade_val = val
 
         if self.video:
             self.video.opacity = val
-            self.video.volume = val
+            self.video.volume = val * self.max_volume * self.minion_volume
 
         elif self.audio:
-            self.audio.volume = val
+            self.audio.volume = val * self.max_volume * self.minion_volume
             
         elif self.image:
             self.image.opacity = val
@@ -123,10 +130,13 @@ class MediaAction(Action):
         
         if self.video:
             self.video.state = 'pause'
-            self.client.source.remove_widget(self.video)
-            
+            self.client.remove_widget(self.video)
+
         elif self.audio:
             self.audio.stop()
+
+        elif self.image:
+            self.client.remove_widget(self.image)
         
     def check_ready(self):
         if self.get_media_time() >= 0:
@@ -144,13 +154,13 @@ class MediaAction(Action):
 
         if self.video:
             self.video.state = 'play'
-            self.client.source.add_widget(self.video, index = self.client.get_widget_index(self))
+            self.client.add_layer_widget(self.video, self.layer)
             
         elif self.audio:
             self.audio.play()
             
         elif self.image:
-            self.client.source.add_widget(self.image, index = self.client.get_widget_index(self))
+            self.client.add_layer_widget(self.image, self.layer)
             
         if self.fade: self.fade.stop()
         self.fade = Fade(self.client.time, self.fade_val, 1, fade_start, fade_end, self.fade_tick, None)
