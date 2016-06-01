@@ -1,8 +1,6 @@
-import kivy.core.text
 from kivy.uix.label import Label
 from kivy.core.window import Window
-from kivy.properties import StringProperty, ObjectProperty, ListProperty
-from kivy.graphics import RenderContext, Fbo, Color, Rectangle
+from kivy.graphics import Color, Rectangle
 
 import re
 

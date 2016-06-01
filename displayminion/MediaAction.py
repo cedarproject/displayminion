@@ -1,9 +1,6 @@
 media_sync_interval = 0.25
 media_sync_tolerance = 0.1
 
-import kivy
-kivy.require('1.9.0')
-
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.uix.image import AsyncImage
@@ -41,19 +38,20 @@ class MediaAction(Action):
         self.image = None
         
         self.to_sync = None
-
+        
         if self.media['type'] == 'video':
-            self.video = Video(source = self.sourceurl)
-            self.to_sync = self.video
-            self.video.allow_stretch = True
-            
+            options = {}
             if self.settings.get('media_loop') == 'yes':
-                # TODO get loop working properly
-#                self.video.options = {'loop': True}
-                self.video.bind(on_eos = lambda i, v: i.seek(0))
+                options['eos'] = 'loop'
+
+            self.video = Video(source = self.sourceurl, options = options)
+            self.to_sync = self.video
+
+            self.video.allow_stretch = True            
             
             if self.settings.get('media_preserve_aspect') == 'no':
                 self.video.keep_ratio = False
+
 
             self.video.opacity = 0
             self.video.volume = 0            
@@ -96,6 +94,10 @@ class MediaAction(Action):
         if diff > self.duration: diff = self.duration
         
         return diff
+    
+    def get_seek_percent(self, time):
+        if time == 0: return 0
+        else: return 1 / (self.media['duration'] / time)
         
     def media_sync(self, dt = None):
         if self.shown:
@@ -107,7 +109,8 @@ class MediaAction(Action):
                     if self.video: self.to_sync.state = 'stop'
                     elif self.audio: self.audio.stop()
                 else:
-                    self.to_sync.seek(self.get_media_time())
+                    print(self.media['title'], 'seeking to', self.get_media_time())
+                    self.to_sync.seek(self.get_seek_percent(self.get_media_time()))
             
             # Automatic sync disabled until Kivy playback rate change is implemented
             #Clock.schedule_once(self.media_sync, media_sync_interval)

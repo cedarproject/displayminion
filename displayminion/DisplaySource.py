@@ -32,10 +32,7 @@ class DisplaySource(FloatLayout):
         self.fbo.size = Window.size
         self.texture = self.fbo.texture
         self.fbo_rect.size = Window.size
-        
-        for section in self.sections:
-            section.rect.texture = self.texture
-            
+                    
     def add_widget(self, *args, **kwargs):
         c = self.canvas
         self.canvas = self.fbo

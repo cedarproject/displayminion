@@ -28,16 +28,20 @@ from .UserInterface import UserInterface
 
 from .Action import Action
 from .MediaAction import MediaAction
+from .PlaylistAction import PlaylistAction
 from .SongAction import SongAction
 from .PresentationAction import PresentationAction
+from .TimerAction import TimerAction
 
 # TODO implement stuff from https://kivy.org/planet/2011/05/kivy-window-management-on-x11/ to make window fullscreen, optionally on multiple monitors
 
 class DisplayMinion(App):
     action_map = {
         'media': MediaAction,
+        'playlist': PlaylistAction,
         'song': SongAction,
         'presentation': PresentationAction,
+        'timer': TimerAction,
         'clear-layer': Action
     }
     
@@ -98,7 +102,8 @@ class DisplayMinion(App):
         self.collections = 0
         self.collections_ready = 0
 
-        for collection in ['settings', 'stages', 'minions', 'media',
+        for collection in ['settings', 'stages', 'minions',
+                           'media', 'mediaplaylists',
                            'songs', 'songarrangements', 'songsections',
                            'presentations', 'presentationslides']:
 
@@ -170,8 +175,7 @@ class DisplayMinion(App):
                 
                 section = Section(
                     source = self.source,
-                    points = config['points']
-                    # TODO add brightess/width/height/x/y
+                    block = config
                 )
                 
                 self.layout.add_widget(section)
@@ -185,8 +189,8 @@ class DisplayMinion(App):
         
         for index, section in enumerate(self.sections):
             config = self.minion['settings']['blocks'][index]
-            if not section.points == config['points']: # TODO add brightness etc.
-                section.points = config['points']
+            if not section.block == config: # TODO add brightness etc.
+                section.block = config
                 section.recalc()
     
     def update_layers(self, dt = None):
