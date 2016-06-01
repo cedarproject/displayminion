@@ -30,7 +30,10 @@ class Action:
     def combine_settings(self, *args):
         result = {}
         for arg in args:
-            if type(arg) == dict: result.update(arg)
+            if type(arg) == dict:
+                for k, v in arg.items():
+                    if not type(v) == type(None):
+                        result[k] = v
             
         return result
         

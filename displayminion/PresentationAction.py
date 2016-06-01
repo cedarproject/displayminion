@@ -111,8 +111,6 @@ class PresentationAction(Action):
                 self.pres_size = [self.size_hint[0], self.size_hint[1] / 2.0]
                 self.img_pos = {'x': self.pos['x'], 'y': self.pos['y']}
                 self.img_size = [self.size_hint[0], self.size_hint[1] / 2.0]
-            
-            print(self.size_hint, self.pos, self.pres_size, self.pres_pos, self.img_size, self.img_pos)
                 
         elif len(self.text.strip()):
             self.do_text = True
@@ -120,8 +118,6 @@ class PresentationAction(Action):
             
             self.pres_pos = self.pos
             self.pres_size = self.size_hint
-            
-            print(self.size_hint, self.pos)
         
         else:
             self.do_images = True

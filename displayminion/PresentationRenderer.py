@@ -11,6 +11,10 @@ class PresentationRenderer(mistune.Renderer):
         self.fillin = 0
 
         super(PresentationRenderer, self).__init__(*args, **kwargs)
+        
+    def color(self, text, color):
+        colorhex = '{0:02x}{1:02x}{2:02x}'.format(*(round(c * 255) for c in color))
+        return '[color={}]{}[/color]'.format(colorhex, text)
     
     def paragraph(self, text):
         return '{}\n'.format(text)
@@ -48,9 +52,15 @@ class PresentationRenderer(mistune.Renderer):
             return ''
     
     def emphasis(self, text):
+        if self.settings.get('presentations_font_color_italic'):
+            text = self.color(text, self.settings.get('presentations_font_color_italic'))
+
         return '[i]{}[/i]'.format(text)
         
     def double_emphasis(self, text):
+        if self.settings.get('presentations_font_color_bold'):
+            text = self.color(text, self.settings.get('presentations_font_color_bold'))
+
         return '[b]{}[/b]'.format(text)
         
     def linebreak(self):
@@ -61,6 +71,9 @@ class PresentationRenderer(mistune.Renderer):
         
     def strikethrough(self, text):
         # Hijacked, now it's underline
+        if self.settings.get('presentations_font_color_underline'):
+            text = self.color(text, self.settings.get('presentations_font_color_underline'))
+
         return '[u]{}[/u]'.format(text)
         
     def text(self, text):
