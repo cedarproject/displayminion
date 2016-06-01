@@ -28,7 +28,7 @@ class PresentationAction(Action):
             return
 
         self.slide = self.meteor.find_one('presentationslides',
-            selector = {'presentations': self.presentation['_id'], 'order': self.args['order']})
+            selector = {'presentation': self.presentation['_id'], 'order': self.args['order']})
             
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'),
             self.presentation.get('settings'), self.slide.get('settings'), self.action.get('settings'))
@@ -167,7 +167,10 @@ class PresentationAction(Action):
         
     def get_current_widget_index(self):
         if self.shown and not self.blank:
-            return self.client.source.children.index(self.label)
+            i = [self.client.source.children.index(self.bg)]
+            if self.label: i.append(self.client.source.children.index(self.label))
+            if self.layout: i.append(self.client.source.children.index(self.layout))
+            return max(i)
             
     def fade_tick(self, val):
         self.fade_val = val

@@ -19,7 +19,10 @@ class MediaAction(Action):
         super(MediaAction, self).__init__(*args, **kwargs)
 
         self.media = self.meteor.find_one('media', selector={'_id': self.action.get('media')})
-        self.duration = float(self.media['duration'])
+
+        self.duration = self.media.get('duration')
+        if self.duration: self.duration = float(self.duration)
+        else: self.duration = 0
         
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'), self.media.get('settings'), self.action.get('settings'))
         
@@ -100,7 +103,7 @@ class MediaAction(Action):
         else: return 1 / (self.media['duration'] / time)
         
     def media_sync(self, dt = None):
-        if self.shown:
+        if self.shown and not self.media['type'] == 'image':
             if self.video: pos = self.video.position
             elif self.audio: pos = self.audio.get_pos()
                 
