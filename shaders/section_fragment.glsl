@@ -8,6 +8,7 @@ uniform float blend_left;
 uniform float blend_right; */
 
 uniform float adjust;
+uniform int alpha_mask;
 
 void main (void) {
     gl_FragColor = texture2D(texture0, tex_coord0);
@@ -22,4 +23,14 @@ void main (void) {
     } else if (tex_coord0[1] < blend_bottom) {
         gl_FragColor[3] *= 1.0 / (blend_bottom / (1.0 - tex_coord0[1]));
     } */
+
+    for (int i = 0; i < 3; i++) {
+        if (gl_FragColor[i] < adjust) {
+            gl_FragColor[i] = adjust;
+        }
+    }
+
+    if (alpha_mask == 1) {
+        gl_FragColor = vec4(gl_FragColor[3], gl_FragColor[3], gl_FragColor[3], gl_FragColor[3]);
+    }
 }

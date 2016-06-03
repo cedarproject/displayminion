@@ -6,7 +6,7 @@ from kivy.graphics.vertex_instructions import Quad
 from kivy.graphics.transformation import Matrix
 from kivy.resources import resource_find
 from kivy.core.window import Window
-from kivy.properties import StringProperty, ObjectProperty, ListProperty
+from kivy.properties import StringProperty, ObjectProperty, ListProperty, BooleanProperty
 from kivy.graphics import RenderContext, Fbo, Color, Rectangle, ClearBuffers, ClearColor
 
 import numpy
@@ -76,6 +76,7 @@ class Section(Widget):
                 
         self.canvas['uTransformMatrix'] = matrix
         self.canvas['brightness'] = float(self.block['brightness'])
+        self.canvas['alpha_mask'] = int(self.block['alpha_mask']) # Because Kivy can't pass booleans to shaders, apparently.
         
 #        self.canvas['blend_top'] = float(self.block['blend_top'])
 #        self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
