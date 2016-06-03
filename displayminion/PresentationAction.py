@@ -9,6 +9,7 @@ from kivy.graphics import Color, Rectangle
 #Loader.loading_image = ''
 
 import math
+import urllib.parse
 
 import mistune
 from .PresentationRenderer import PresentationRenderer
@@ -46,7 +47,7 @@ class PresentationAction(Action):
         
         for _id in self.imageids:
             m = self.meteor.find_one('media', selector = {'_id': _id})
-            url = 'http://{}{}'.format(self.client.server, mediaurl + m['location'])
+            url = 'http://{}{}'.format(self.client.server, urllib.parse.quote(mediaurl + m['location']))
 
             i = AsyncImage(source = url)
             i.allow_stretch = True

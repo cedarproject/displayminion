@@ -14,6 +14,8 @@ from kivy.uix.label import Label
 from .Action import Action
 from .Fade import Fade
 
+import urllib.parse
+
 class MediaAction(Action):
     def __init__(self, *args, **kwargs):
         super(MediaAction, self).__init__(*args, **kwargs)
@@ -34,7 +36,7 @@ class MediaAction(Action):
         
         # TODO autodetect HTTP/HTTPS, other protocols?
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
-        self.sourceurl = 'http://{}{}'.format(self.client.server, mediaurl + self.media['location'])
+        self.sourceurl = 'http://{}{}'.format(self.client.server, urllib.parse.quote(mediaurl + self.media['location']))
         
         self.video = None
         self.audio = None
