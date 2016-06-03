@@ -186,6 +186,13 @@ class PresentationAction(Action):
         self.client.remove_widget(self.bg)
         if self.label: self.client.remove_widget(self.label)
         if self.layout: self.client.remove_widget(self.layout)
+
+    def check_ready(self):
+        for image in self.images:
+            if not image._coreimage.loaded:
+                return False
+
+        return True
         
     def on_show(self, fade_start, fade_end):
         if not self.blank:
