@@ -19,7 +19,7 @@ class Action:
         self.settings = self.combine_settings(self.client.defaults, self.action.get('settings'))
         self.args = action.get('args', {})
         
-        self.fade_length = False
+        self.fade_length = None
         
         self.ready = False
         self.shown = False
@@ -45,7 +45,10 @@ class Action:
         
     def get_fade_start_end(self):
         if self.fade_length == None:
-            return self.time.now(), self.time.now() + (self.old_action.fade_length or 0)
+            if self.old_action and self.old_action.fade_length:
+                return self.time.now(), self.time.now() + (self.old_action.fade_length or 0)
+            else:
+                return self.time.now(), self.time.now()
         else:
             return self.time.now(), self.time.now() + self.fade_length
         
