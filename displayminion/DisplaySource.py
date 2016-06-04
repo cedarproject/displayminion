@@ -6,7 +6,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.resources import resource_find
 from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
-from kivy.graphics import RenderContext, Fbo, Color, Rectangle, ClearBuffers, ClearColor
+from kivy.graphics import RenderContext, Fbo, ClearBuffers, ClearColor
 
 class DisplaySource(FloatLayout):
     texture = ObjectProperty(None)
@@ -17,11 +17,11 @@ class DisplaySource(FloatLayout):
         self.canvas = RenderContext(use_parent_projection = True)
         with self.canvas:
             self.fbo = Fbo(size = Window.size, use_parent_projection = True)
-        
-        with self.fbo:
-            Color(0, 0, 0, 1)
-            self.fbo_rect = Rectangle(size = Window.size)
 
+        with self.fbo:
+            ClearColor(0, 0, 0, 0)
+            ClearBuffers()
+        
         super(DisplaySource, self).__init__(**kwargs)
             
         self.texture = self.fbo.texture
@@ -31,7 +31,6 @@ class DisplaySource(FloatLayout):
     def resize(self, window, width, height):
         self.fbo.size = Window.size
         self.texture = self.fbo.texture
-        self.fbo_rect.size = Window.size
                     
     def add_widget(self, *args, **kwargs):
         c = self.canvas
