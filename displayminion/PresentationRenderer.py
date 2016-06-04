@@ -3,61 +3,55 @@
 # TODO implement fill-in-the-blank lookahead/behind for lists, continuation for multi-style strings
 def presentation_renderer(content, settings, args):
     output = ''
-    
+
     fillin = 1
     fillin_cont = False
     list_line = 1
     
     for section in content['ops']:
-        pre = ''
         insert = section['insert']
+        pre = ''
         
-        if insert == '\n':
-            insert = ''
-            pre = '\n'
-            for attr, value in section.get('attributes', {}).items():
-                if attr == 'indent':
-                    pre += '    ' * value
+        for attr, value in section.get('attributes', {}).items():
+            if attr == 'italic':
+                insert = '[i]{}[/i]'.format(insert)
                 
-                elif attr == 'list':
-                    pre += '  '
-                    if value == 'bullet':
-                        insert = '• ' + insert
-                        
-                    elif value == 'ordered':
-                        insert = '{}. {}'.format(list_line, insert)
-                        list_line += 1
+            elif attr == 'bold':
+                insert = '[b]{}[/b]'.format(insert)
+                
+            elif attr == 'underline':
+                insert = '[u]{}[/u]'.format(insert)
+                
+            elif attr == 'color':
+                insert = '[color={}]{}[/color]'.format(value, insert)
             
-        else:
-            for attr, value in section.get('attributes', {}).items():
-                if attr == 'italic':
-                    insert = '[i]{}[/i]'.format(insert)
+            elif attr == 'strike':
+                # Cedar currently hijacks strike tags for its fill-in feature
+                if int(args.get('fillin')) < fillin:
+                    insert = ''
                     
-                elif attr == 'bold':
-                    insert = '[b]{}[/b]'.format(insert)
-                    
-                elif attr == 'underline':
-                    insert = '[u]{}[/u]'.format(insert)
-                    
-                elif attr == 'color':
-                    insert = '[color={}]{}[/color]'.format(value, insert)
+                fillin_cont = True
+            
+            elif attr == 'size':
+                size = float(settings.get('presentations_font_size'))
                 
-                elif attr == 'strike':
-                    # Cedar currently hijacks strike tags for its fill-in feature
-                    if int(args.get('fillin')) < fillin:
-                        insert = ''
-                        
-                    fillin_cont = True
+                if value == 'small': size *= 0.75
+                elif value == 'large': size *= 1.25
+                elif value == 'huge': size *= 1.75
                 
-                elif attr == 'size':
-                    size = float(settings.get('presentations_font_size'))
+                insert = '[size={}]{}[/size]'.format(round(size), insert)
+            
+            if attr == 'indent':
+                pre = '    ' * value + pre
+            
+            elif attr == 'list':
+                if value == 'bullet':
+                    pre += '  • '
                     
-                    if value == 'small': size *= 0.75
-                    elif value == 'large': size *= 1.25
-                    elif value == 'huge': size *= 1.75
-                    
-                    insert = '[size={}]{}[/size]'.format(round(size), insert)
-                                    
+                elif value == 'ordered':
+                    pre += '  {}. {}'.format(list_line, insert)
+                    list_line += 1
+
         if '\n' in insert and not section.get('attributes', {}).get('list') == 'ordered':
             list_line = 1
         
@@ -65,6 +59,11 @@ def presentation_renderer(content, settings, args):
             fillin_cont = False 
             fillin += 1
         
-        output += pre + insert
+        i = output.rfind('\n')
+        if not i == -1: output = output[:i+1] + pre + output[i+1:]
+        
+        output += insert
     
+    print(content)
+    print(output)
     return output
