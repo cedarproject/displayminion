@@ -1,80 +1,70 @@
-import mistune
+# Render Quill's intermediate format into Kivy's obscure BBcode-ish markup (https://kivy.org/docs/api-kivy.uix.label.html#markup-text)
 
-# Render Markdown into Kivy's obscure BBcode-ish markup (https://kivy.org/docs/api-kivy.uix.label.html#markup-text)
-class PresentationRenderer(mistune.Renderer):
-    def __init__(self, *args, **kwargs):
-        # TODO font etc. settings
-        self.settings = kwargs['settings']
-        self.args = kwargs['args']
-        del kwargs['settings'], kwargs['args']
-        
-        self.fillin = 0
-
-        super(PresentationRenderer, self).__init__(*args, **kwargs)
-        
-    def color(self, text, color):
-        colorhex = '{0:02x}{1:02x}{2:02x}'.format(*(round(c * 255) for c in color))
-        return '[color={}]{}[/color]'.format(colorhex, text)
+# TODO implement fill-in-the-blank lookahead/behind for lists, continuation for multi-style strings
+def presentation_renderer(content, settings, args):
+    output = ''
     
-    def paragraph(self, text):
-        return '{}\n'.format(text)
+    fillin = 1
+    fillin_cont = False
+    list_line = 1
+    
+    for section in content['ops']:
+        pre = ''
+        insert = section['insert']
         
-    def header(self, text, level, raw = None):
-        size = float(self.settings.get('presentations_font_size'))
-        if level == 1: size *= 2
-        elif level == 2: size *= 1.5
-        elif level == 3: size *= 1.17
-        
-        return '[size={}]{}[/size]\n'.format(str(round(size)), text)
-        
-    def list(self, body, ordered = True):
-        lines = body.split('\n')
-        output = ''
-        
-        for line, n in zip(lines, enumerate(lines)):
-            if ordered and len(line) > 0:
-                output += '    {}. {}\n'.format(str(n + 1), line)
-            elif len(line) > 0:
-                output += '    • {}\n'.format(line)
-
-        return output
-        
-    def list_item(self, text):
-        return '{}\n'.format(text)
-        
-    def codespan(self, text):
-        # Cedar hijacks inline code spans for its fill-in-the-blank feature
-        self.fillin += 1
-        
-        if self.args['fillin'] >= self.fillin:
-            return text
+        if insert == '\n':
+            insert = ''
+            pre = '\n'
+            for attr, value in section.get('attributes', {}).items():
+                if attr == 'indent':
+                    pre += '    ' * value
+                
+                elif attr == 'list':
+                    pre += '  '
+                    if value == 'bullet':
+                        insert = '• ' + insert
+                        
+                    elif value == 'ordered':
+                        insert = '{}. {}'.format(list_line, insert)
+                        list_line += 1
+            
         else:
-            return ''
+            for attr, value in section.get('attributes', {}).items():
+                if attr == 'italic':
+                    insert = '[i]{}[/i]'.format(insert)
+                    
+                elif attr == 'bold':
+                    insert = '[b]{}[/b]'.format(insert)
+                    
+                elif attr == 'underline':
+                    insert = '[u]{}[/u]'.format(insert)
+                    
+                elif attr == 'color':
+                    insert = '[color={}]{}[/color]'.format(value, insert)
+                
+                elif attr == 'strike':
+                    # Cedar currently hijacks strike tags for its fill-in feature
+                    if int(args.get('fillin')) < fillin:
+                        insert = ''
+                        
+                    fillin_cont = True
+                
+                elif attr == 'size':
+                    size = float(settings.get('presentations_font_size'))
+                    
+                    if value == 'small': size *= 0.75
+                    elif value == 'large': size *= 1.25
+                    elif value == 'huge': size *= 1.75
+                    
+                    insert = '[size={}]{}[/size]'.format(round(size), insert)
+                                    
+        if '\n' in insert and not section.get('attributes', {}).get('list') == 'ordered':
+            list_line = 1
+        
+        if fillin_cont and not section.get('attributes', {}).get('strike'):
+            fillin_cont = False 
+            fillin += 1
+        
+        output += pre + insert
     
-    def emphasis(self, text):
-        if self.settings.get('presentations_font_color_italic'):
-            text = self.color(text, self.settings.get('presentations_font_color_italic'))
-
-        return '[i]{}[/i]'.format(text)
-        
-    def double_emphasis(self, text):
-        if self.settings.get('presentations_font_color_bold'):
-            text = self.color(text, self.settings.get('presentations_font_color_bold'))
-
-        return '[b]{}[/b]'.format(text)
-        
-    def linebreak(self):
-        return '\n'
-    
-    def newline(self):
-        return '\n'
-        
-    def strikethrough(self, text):
-        # Hijacked, now it's underline
-        if self.settings.get('presentations_font_color_underline'):
-            text = self.color(text, self.settings.get('presentations_font_color_underline'))
-
-        return '[u]{}[/u]'.format(text)
-        
-    def text(self, text):
-        return text
+    return output

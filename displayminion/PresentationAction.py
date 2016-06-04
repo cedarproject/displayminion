@@ -8,11 +8,11 @@ from kivy.graphics import Color, Rectangle
 #from kivy.loader import Loader
 #Loader.loading_image = ''
 
+import sys
 import math
 import urllib.parse
 
-import mistune
-from .PresentationRenderer import PresentationRenderer
+from .PresentationRenderer import presentation_renderer
 
 from .Action import Action
 from .Fade import Fade
@@ -36,9 +36,12 @@ class PresentationAction(Action):
         
         self.fade_length = float(self.settings.get('presentations_fade', 0.25))
         self.fade_val = 0
-
-        markdown = mistune.Markdown(renderer=PresentationRenderer(settings = self.settings, args = self.args))
-        self.text = markdown(self.slide['content'])
+        
+        try:
+            self.text = presentation_renderer(self.slide['content'], self.settings, self.args)
+        except:
+            print(sys.exc_info()[0])
+            #self.text = sys.exc_info()[0]
         
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
 
@@ -150,7 +153,7 @@ class PresentationAction(Action):
                 halign = self.settings.get('presentations_align_horizontal'),
                 valign = self.settings.get('presentations_align_vertical'),
                 font_name = self.settings.get('presentations_font'),
-                font_size = float(self.settings.get('presentations_font_size')),
+                font_size = round(float(self.settings.get('presentations_font_size'))),
                 color = self.settings.get('presentations_font_color'),
                 outline_width = self.settings.get('presentations_font_outline'),
                 outline_color = self.settings.get('presentations_font_outline_color')

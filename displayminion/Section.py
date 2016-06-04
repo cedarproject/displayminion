@@ -29,7 +29,7 @@ class Section(Widget):
         
         self.recalc()
     
-    def recalc(self):
+    def recalc(self, *args, **kwargs):
         w, h = self.source.texture.width, self.source.texture.height
 
         self.texture = self.source.texture.get_region(
@@ -75,8 +75,8 @@ class Section(Widget):
         ])
                 
         self.canvas['uTransformMatrix'] = matrix
-        self.canvas['brightness'] = float(self.block['brightness'])
-        self.canvas['alpha_mask'] = int(self.block['alpha_mask']) # Because Kivy can't pass booleans to shaders, apparently.
+        self.canvas['brightness'] = float(self.block.get('brightness', 1))
+        self.canvas['alpha_mask'] = int(self.block.get('alpha_mask', False)) # Because Kivy can't pass booleans to shaders, apparently.
         
 #        self.canvas['blend_top'] = float(self.block['blend_top'])
 #        self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
