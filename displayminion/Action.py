@@ -86,7 +86,7 @@ class Action:
         if self.shown:
             if not fade_start and not fade_end:
                 fade_start = self.time.now()
-                fade_end = self.time.now() + self.fade_length
+                fade_end = self.time.now() + (self.fade_length or 0)
                 
             self.on_hide(fade_start, fade_end)
             
