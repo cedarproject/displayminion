@@ -37,10 +37,11 @@ class PresentationAction(Action):
         self.fade_length = float(self.settings.get('presentations_fade', 0.25))
         self.fade_val = 0
         
-#        try:
-        self.text = presentation_renderer(self.slide['content'], self.settings, self.args)
-#        except:
-#            print(sys.exc_info()[0])
+        try:
+            self.text = presentation_renderer(self.slide['content'], self.settings, self.args)
+        except:
+            print(sys.exc_info()[0])
+            self.text = ''
 #            self.text = 'Error loading slide:\n' + str(sys.exc_info()[0])
         
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
@@ -191,6 +192,8 @@ class PresentationAction(Action):
         if self.layout: self.client.remove_widget(self.layout)
 
     def check_ready(self):
+        if self.blank: return True
+
         for image in self.images:
             if not image._coreimage.loaded:
                 return False
