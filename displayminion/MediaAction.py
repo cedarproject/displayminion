@@ -48,7 +48,8 @@ class MediaAction(Action):
             if self.settings.get('media_loop') == 'yes':
                 options['eos'] = 'loop'
 
-            self.video = Video(source = self.sourceurl, options = options, size = self.client.source.child_size, size_hint = (None, None))
+            # , size = self.client.source.child_size, size_hint = (None, None)
+            self.video = Video(source = self.sourceurl, options = options)
             self.to_sync = self.video
 
             self.video.allow_stretch = True            
@@ -71,8 +72,7 @@ class MediaAction(Action):
             self.audio.volume = 0
         
         elif self.media['type'] == 'image':
-            print('source size', self.client.source.size)
-            self.image = AsyncImage(source = self.sourceurl, size = self.client.source.child_size, size_hint = (None, None))
+            self.image = AsyncImage(source = self.sourceurl)
             self.image.allow_stretch = True
 
             if self.settings.get('media_preserve_aspect') == 'no':

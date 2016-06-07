@@ -31,13 +31,13 @@ class Section(Widget):
     def recalc(self, *args, **kwargs):
         w, h = self.source.texture.width, self.source.texture.height
 
-#        self.texture = self.source.texture.get_region(
-#            min(self.block['x'] * w, w),
-#            min(self.block['y'] * h, h),
-#            min(self.block['width'] * w, w),
-#            min(self.block['height'] * h, h)
-#        )
-        self.texture = self.source.texture
+        self.texture = self.source.texture.get_region(
+            min(self.block['x'] * w, w),
+            min(self.block['y'] * h, h),
+            min(self.block['width'] * w, w),
+            min(self.block['height'] * h, h)
+        )
+#        self.texture = self.source.texture
         
         before = [
             [-1, -1],
@@ -88,4 +88,5 @@ class Section(Widget):
         with self.canvas:
             self.rect = Rectangle(texture = self.texture, size = (2, 2), pos = (-1, -1))
         
-        print('section recalced', self.size, self.texture.size)
+        print('section recalced', self.texture.size)
+        print(self.texture.size, self.texture.tex_coords, self.texture.uvpos, self.texture.uvsize, self.texture.wrap)

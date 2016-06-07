@@ -20,9 +20,6 @@ class DisplaySource(FloatLayout):
         self.disp_size = [0, 0]
         self.child_size = Window.size
 
-        self.last_resize = 0
-        self.resize_trigger = Clock.create_trigger(self.resize)
-
         self.canvas = RenderContext(use_parent_projection = True)
         with self.canvas:
             self.fbo = Fbo(size = Window.size, use_parent_projection = True)
@@ -38,24 +35,34 @@ class DisplaySource(FloatLayout):
         Window.bind(on_resize = self.resize)
         
     def resize(self, *args):
-        if not time.time() - self.last_resize > min_resize_time:
-            self.resize_trigger()
-        else:
-            print('disp size', self.disp_size)
-            if self.disp_size[0] and self.disp_size[1]:
-                self.child_size = self.disp_size
-#                if not self.fbo.size == self.disp_size: self.fbo.size = self.disp_size
-            else:
-                self.child_size = Window.size
-
-            self.fbo.size = Window.size
-                
-            print('resized to', self.fbo.size)
-
-            self.texture = self.fbo.texture
+        # Ensures resize is called from the correct thread
+        Clock.schedule_once(self._resize, 0)
+    
+    def _resize(self, *args):
+        to_size = list(Window.size)
+        if self.disp_size[0] > 0:
+            to_size[0] = self.disp_size[0]
+        
+        if self.disp_size[1] > 0:
+            to_size[1] = self.disp_size[1]
             
-            for s in self.client.sections: s.recalc()
-            self.last_resize = time.time()
+        print('resizing to', to_size)
+        self.child_size = to_size
+        self.size = to_size
+        self.fbo.size = to_size
+
+        self.texture = self.fbo.texture
+        self.texture.min_filter = 'linear'
+        self.texture.mag_filter = 'linear'
+        
+        self.texture.uvsize = (
+            to_size[0] / Window.size[0],
+            to_size[1] / Window.size[1]
+        )
+        
+        for s in self.client.sections: s.recalc()
+        
+#        self.texture.save('texture-test.png')
     
     def add_widget(self, *args, **kwargs):
         c = self.canvas
