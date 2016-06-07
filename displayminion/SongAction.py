@@ -30,6 +30,9 @@ class SongAction(Action):
         # Removes text between square brackets and replaces multiple consecutive spaces with a single space
         self.text = re.sub(r' +', ' ', re.sub(r'\[(.*?)\]', '', self.contents)).strip()
 
+        if self.settings.get('songs_font_weight') == 'bold':
+            self.text = '[b]{}[/b]'.format(self.text)
+
         self.size_hint = [
             float(self.settings.get('songs_width')) * 0.01,
             float(self.settings.get('songs_height')) * 0.01
