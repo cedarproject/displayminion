@@ -175,7 +175,8 @@ class DisplayMinion(App):
                 
                 section = Section(
                     source = self.source,
-                    block = config
+                    block = config,
+                    client = self
                 )
                 
                 self.layout.add_widget(section)

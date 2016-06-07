@@ -15,9 +15,10 @@ class Section(Widget):
     source = ObjectProperty(None)
     block = ObjectProperty(None)
 
-    def __init__(self, **kwargs):
+    def __init__(self, client, **kwargs):
         self.canvas = RenderContext(use_parent_projection=True)
-        
+        self.client = client
+
         super(Section, self).__init__(**kwargs)
 
         self.source.sections.append(self)
@@ -77,6 +78,7 @@ class Section(Widget):
         self.canvas['uTransformMatrix'] = matrix
         self.canvas['brightness'] = float(self.block.get('brightness', 1))
         self.canvas['alpha_mask'] = int(self.block.get('alpha_mask', False)) # Because Kivy can't pass booleans to shaders, apparently.
+        self.canvas['adjust'] = float(self.client.minion['settings'].get('displayminion_color_adjust_range', 0))
         
 #        self.canvas['blend_top'] = float(self.block['blend_top'])
 #        self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
