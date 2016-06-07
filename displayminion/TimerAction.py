@@ -2,7 +2,6 @@ timer_tick_interval = 0.1
 
 from kivy.clock import Clock
 from kivy.uix.label import Label
-from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle
 
 import math
@@ -28,7 +27,7 @@ class TimerAction(Action):
                         
         self.label = Label(
             markup = True,
-            text_size = Window.size,
+            text_size = self.client.source.disp_size,
             halign = self.settings.get('timers_text_align'),
             valign = self.settings.get('timers_text_vertical_align'),
             font_name = self.settings.get('timers_font'),

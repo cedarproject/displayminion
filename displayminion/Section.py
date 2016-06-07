@@ -9,6 +9,8 @@ from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, BooleanProperty
 from kivy.graphics import RenderContext, Fbo, Color, Rectangle, ClearBuffers, ClearColor
 
+from kivy.core.window import Window
+
 import numpy
 
 class Section(Widget):
@@ -20,25 +22,22 @@ class Section(Widget):
         self.client = client
 
         super(Section, self).__init__(**kwargs)
-
-        self.source.sections.append(self)
-
+        
         self.canvas.shader.fs = open(resource_find('shaders/section_fragment.glsl')).read()
         self.canvas.shader.vs = open(resource_find('shaders/section_vertex.glsl')).read()
-        
-        Window.bind(on_resize = self.recalc)
         
         self.recalc()
     
     def recalc(self, *args, **kwargs):
         w, h = self.source.texture.width, self.source.texture.height
 
-        self.texture = self.source.texture.get_region(
-            min(self.block['x'] * w, w),
-            min(self.block['y'] * h, h),
-            min(self.block['width'] * w, w),
-            min(self.block['height'] * h, h)
-        )
+#        self.texture = self.source.texture.get_region(
+#            min(self.block['x'] * w, w),
+#            min(self.block['y'] * h, h),
+#            min(self.block['width'] * w, w),
+#            min(self.block['height'] * h, h)
+#        )
+        self.texture = self.source.texture
         
         before = [
             [-1, -1],
@@ -88,3 +87,5 @@ class Section(Widget):
         self.canvas.clear()
         with self.canvas:
             self.rect = Rectangle(texture = self.texture, size = (2, 2), pos = (-1, -1))
+        
+        print('section recalced', self.size, self.texture.size)

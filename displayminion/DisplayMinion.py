@@ -164,6 +164,11 @@ class DisplayMinion(App):
             self.last_blocks = minion['settings']['blocks']
             Clock.schedule_once(self.update_minion_blocks, 0)
         
+        if not minion['settings'].get('mediaminion_width', 0) == self.source.disp_size[0] or \
+           not minion['settings'].get('mediaminion_height', 0) == self.source.disp_size[1]:
+            self.source.disp_size = (int(minion['settings'].get('mediaminion_width', 0)), int(minion['settings'].get('mediaminion_height', 0)))
+            self.source.resize()
+        
     def update_minion_blocks(self, dt):
         # Note: Sections were originally named "blocks", so far I've been to lazy to rewrite all the cedarserver code to reflect the new name. -IHS
         start_length = len(self.sections)
@@ -185,7 +190,6 @@ class DisplayMinion(App):
         elif block_delta < 0:
             for n in range(abs(block_delta)):
                 section = self.sections.pop()
-                section.source.sections.remove(section)
                 self.layout.remove_widget(section)
         
         for index, section in enumerate(self.sections):
@@ -287,7 +291,7 @@ class DisplayMinion(App):
         else:
             self.icon = 'logo/logo-1024x1024.png'
 
-        self.source = DisplaySource(pos_hint = {'x': 1, 'y': 1})
+        self.source = DisplaySource(self, pos_hint = {'x': 1, 'y': 1}, size_hint = [None, None])
 
         self.layout = FloatLayout()
         self.layout.add_widget(self.source)

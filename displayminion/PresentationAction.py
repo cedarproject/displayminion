@@ -1,4 +1,3 @@
-from kivy.core.window import Window
 from kivy.uix.label import Label
 from kivy.uix.image import AsyncImage
 from kivy.uix.widget import Widget
@@ -63,8 +62,8 @@ class PresentationAction(Action):
         ]
         
         self.bg_size = [
-            Window.size[0] * self.size_hint[0],
-            Window.size[1] * self.size_hint[1]
+            self.client.source.disp_size[0] * self.size_hint[0],
+            self.client.source.disp_size[1] * self.size_hint[1]
         ]
         
         self.pos = {'x': 0, 'y': 0}
@@ -75,17 +74,17 @@ class PresentationAction(Action):
             self.bg_pos[0] = 0
         elif self.settings.get('presentations_position_horizontal') == 'center':
             self.pos['x'] = -0.5 - (self.size_hint[0] / 2.0)
-            self.bg_pos[0] = (Window.size[0] / 2.0) - (self.bg_size[0] / 2.0)
+            self.bg_pos[0] = (self.client.source.disp_size[0] / 2.0) - (self.bg_size[0] / 2.0)
         elif self.settings.get('presentations_position_horizontal') == 'right':
             self.pos['x'] = -self.size_hint[0]
-            self.bg_pos[0] = Window.size[0] - self.bg_size[0]
+            self.bg_pos[0] = self.client.source.disp_size[0] - self.bg_size[0]
             
         if self.settings.get('presentations_position_vertical') == 'top':
             self.pos['y'] = -self.size_hint[1]
-            self.bg_pos[1] = Window.size[1] - self.bg_size[1]
+            self.bg_pos[1] = self.client.source.disp_size[1] - self.bg_size[1]
         elif self.settings.get('presentations_position_vertical') == 'center':
             self.pos['y'] = -0.5 - (self.size_hint[1] / 2.0)
-            self.bg_pos[1] = (Window.size[1] / 2.0) - (self.bg_size[1] / 2.0)
+            self.bg_pos[1] = (self.client.source.disp_size[1] / 2.0) - (self.bg_size[1] / 2.0)
         elif self.settings.get('presentations_position_vertical') == 'bottom':
             self.pos['y'] = -1
             self.bg_pos[1] = 0
@@ -143,7 +142,7 @@ class PresentationAction(Action):
         self.layout = None            
 
         if self.do_text:
-            self.pres_text_size = [Window.size[0] * self.pres_size[0], Window.size[1] * self.pres_size[1]]
+            self.pres_text_size = [self.client.source.disp_size[0] * self.pres_size[0], self.client.source.disp_size[1] * self.pres_size[1]]
 
             self.label = Label(
                 text = self.text,

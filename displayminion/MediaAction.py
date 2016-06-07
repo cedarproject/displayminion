@@ -5,7 +5,6 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.uix.image import AsyncImage
 from kivy.uix.video import Video
-from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 from kivy.graphics import RenderContext, Fbo, Color, Rectangle
 
@@ -49,7 +48,7 @@ class MediaAction(Action):
             if self.settings.get('media_loop') == 'yes':
                 options['eos'] = 'loop'
 
-            self.video = Video(source = self.sourceurl, options = options)
+            self.video = Video(source = self.sourceurl, options = options, size = self.client.source.child_size, size_hint = (None, None))
             self.to_sync = self.video
 
             self.video.allow_stretch = True            
@@ -72,7 +71,8 @@ class MediaAction(Action):
             self.audio.volume = 0
         
         elif self.media['type'] == 'image':
-            self.image = AsyncImage(source = self.sourceurl)
+            print('source size', self.client.source.size)
+            self.image = AsyncImage(source = self.sourceurl, size = self.client.source.child_size, size_hint = (None, None))
             self.image.allow_stretch = True
 
             if self.settings.get('media_preserve_aspect') == 'no':

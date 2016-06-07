@@ -1,3 +1,5 @@
+min_resize_time = 0.5
+
 import kivy
 kivy.require('1.9.0')
 
@@ -8,11 +10,18 @@ from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 from kivy.graphics import RenderContext, Fbo, ClearBuffers, ClearColor
 
+import time
+
 class DisplaySource(FloatLayout):
     texture = ObjectProperty(None)
 
-    def __init__(self, **kwargs):
-        self.sections = []
+    def __init__(self, client, **kwargs):
+        self.client = client
+        self.disp_size = [0, 0]
+        self.child_size = Window.size
+
+        self.last_resize = 0
+        self.resize_trigger = Clock.create_trigger(self.resize)
 
         self.canvas = RenderContext(use_parent_projection = True)
         with self.canvas:
@@ -28,10 +37,26 @@ class DisplaySource(FloatLayout):
         
         Window.bind(on_resize = self.resize)
         
-    def resize(self, window, width, height):
-        self.fbo.size = Window.size
-        self.texture = self.fbo.texture
-                    
+    def resize(self, *args):
+        if not time.time() - self.last_resize > min_resize_time:
+            self.resize_trigger()
+        else:
+            print('disp size', self.disp_size)
+            if self.disp_size[0] and self.disp_size[1]:
+                self.child_size = self.disp_size
+#                if not self.fbo.size == self.disp_size: self.fbo.size = self.disp_size
+            else:
+                self.child_size = Window.size
+
+            self.fbo.size = Window.size
+                
+            print('resized to', self.fbo.size)
+
+            self.texture = self.fbo.texture
+            
+            for s in self.client.sections: s.recalc()
+            self.last_resize = time.time()
+    
     def add_widget(self, *args, **kwargs):
         c = self.canvas
         self.canvas = self.fbo

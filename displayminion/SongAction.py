@@ -1,5 +1,4 @@
 from kivy.uix.label import Label
-from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle
 
 import re
@@ -36,31 +35,31 @@ class SongAction(Action):
         ]
         
         self.size = [
-            Window.size[0] * self.size_hint[0],
-            Window.size[1] * self.size_hint[1]
+            self.client.source.disp_size[0] * self.size_hint[0],
+            self.client.source.disp_size[1] * self.size_hint[1]
         ]
         
         self.pos = [0, 0]
         self.bg_pos = [0, 0]
         
         if self.settings.get('songs_position_horizontal') == 'left':
-            self.pos[0] = Window.size[0] * -(1 - self.size_hint[0]) / 2.0
+            self.pos[0] = self.client.source.disp_size[0] * -(1 - self.size_hint[0]) / 2.0
             self.bg_pos[0] = 0
         elif self.settings.get('songs_position_horizontal') == 'center':
             self.pos[0] = 0
-            self.bg_pos[0] = (Window.size[0] / 2.0) - (self.size[0] / 2.0)
+            self.bg_pos[0] = (self.client.source.disp_size[0] / 2.0) - (self.size[0] / 2.0)
         elif self.settings.get('songs_position_horizontal') == 'right':
-            self.pos[0] = Window.size[0] * (1 - self.size_hint[0]) / 2.0
-            self.bg_pos[0] = Window.size[0] - self.size[0]
+            self.pos[0] = self.client.source.disp_size[0] * (1 - self.size_hint[0]) / 2.0
+            self.bg_pos[0] = self.client.source.disp_size[0] - self.size[0]
             
         if self.settings.get('songs_position_vertical') == 'top':
-            self.pos[1] = Window.size[1] * (1 - self.size_hint[1]) / 2.0
-            self.bg_pos[1] = Window.size[1] - self.size[1]
+            self.pos[1] = self.client.source.disp_size[1] * (1 - self.size_hint[1]) / 2.0
+            self.bg_pos[1] = self.client.source.disp_size[1] - self.size[1]
         elif self.settings.get('songs_position_vertical') == 'center':
             self.pos[1] = 0
-            self.bg_pos[1] = (Window.size[1] / 2.0) - (self.size[1] / 2.0)
+            self.bg_pos[1] = (self.client.source.disp_size[1] / 2.0) - (self.size[1] / 2.0)
         elif self.settings.get('songs_position_vertical') == 'bottom':
-            self.pos[1] = Window.size[1] * -(1 - self.size_hint[1]) / 2.0
+            self.pos[1] = self.client.source.disp_size[1] * -(1 - self.size_hint[1]) / 2.0
             self.bg_pos[1] = 0
             
         self.label = Label(
