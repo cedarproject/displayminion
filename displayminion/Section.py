@@ -37,7 +37,6 @@ class Section(Widget):
             min(self.block['width'] * w, w),
             min(self.block['height'] * h, h)
         )
-#        self.texture = self.source.texture
         
         before = [
             [-1, -1],
@@ -73,20 +72,23 @@ class Section(Widget):
                0,    0,   1,    0,
             m[6], m[7],   0,    1
         ])
-                
+        
         self.canvas['uTransformMatrix'] = matrix
+
         self.canvas['brightness'] = float(self.block.get('brightness', 1))
         self.canvas['alpha_mask'] = int(self.block.get('alpha_mask', False)) # Because Kivy can't pass booleans to shaders, apparently.
         self.canvas['adjust'] = float(self.client.minion['settings'].get('displayminion_color_adjust_range', 0))
         
-#        self.canvas['blend_top'] = float(self.block['blend_top'])
-#        self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
-#        self.canvas['blend_left'] = float(self.block['blend_left'])
-#        self.canvas['blend_right'] = float(self.block['blend_right'])
+        self.canvas['tex_x'] = self.block['x']
+        self.canvas['tex_y'] = self.block['y']
+        self.canvas['tex_width'] = self.block['width']
+        self.canvas['tex_height'] = self.block['height']
+        
+        self.canvas['blend_top'] = float(self.block['blend_top'])
+        self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
+        self.canvas['blend_left'] = float(self.block['blend_left'])
+        self.canvas['blend_right'] = float(self.block['blend_right'])
 
         self.canvas.clear()
         with self.canvas:
             self.rect = Rectangle(texture = self.texture, size = (2, 2), pos = (-1, -1))
-        
-        print('section recalced', self.texture.size)
-        print(self.texture.size, self.texture.tex_coords, self.texture.uvpos, self.texture.uvsize, self.texture.wrap)

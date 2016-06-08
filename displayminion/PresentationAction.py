@@ -41,7 +41,6 @@ class PresentationAction(Action):
         except:
             print(sys.exc_info()[0])
             self.text = ''
-#            self.text = 'Error loading slide:\n' + str(sys.exc_info()[0])
         
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
 
@@ -62,8 +61,8 @@ class PresentationAction(Action):
         ]
         
         self.bg_size = [
-            self.client.source.disp_size[0] * self.size_hint[0],
-            self.client.source.disp_size[1] * self.size_hint[1]
+            self.client.source.child_size[0] * self.size_hint[0],
+            self.client.source.child_size[1] * self.size_hint[1]
         ]
         
         self.pos = {'x': 0, 'y': 0}
@@ -142,7 +141,7 @@ class PresentationAction(Action):
         self.layout = None            
 
         if self.do_text:
-            self.pres_text_size = [self.client.source.disp_size[0] * self.pres_size[0], self.client.source.disp_size[1] * self.pres_size[1]]
+            self.pres_text_size = [self.client.source.child_size[0] * self.pres_size[0], self.client.source.child_size[1] * self.pres_size[1]]
 
             self.label = Label(
                 text = self.text,

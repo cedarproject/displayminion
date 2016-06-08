@@ -27,7 +27,7 @@ class TimerAction(Action):
                         
         self.label = Label(
             markup = True,
-            text_size = self.client.source.disp_size,
+            text_size = self.client.source.child_size,
             halign = self.settings.get('timers_text_align'),
             valign = self.settings.get('timers_text_vertical_align'),
             font_name = self.settings.get('timers_font'),

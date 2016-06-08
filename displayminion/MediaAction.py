@@ -48,7 +48,6 @@ class MediaAction(Action):
             if self.settings.get('media_loop') == 'yes':
                 options['eos'] = 'loop'
 
-            # , size = self.client.source.child_size, size_hint = (None, None)
             self.video = Video(source = self.sourceurl, options = options)
             self.to_sync = self.video
 
@@ -114,7 +113,6 @@ class MediaAction(Action):
                     if self.video: self.to_sync.state = 'stop'
                     elif self.audio: self.audio.stop()
                 else:
-                    print(self.media['title'], 'seeking to', self.get_media_time())
                     self.to_sync.seek(self.get_seek_percent(self.get_media_time()))
             
             # Automatic sync disabled until Kivy playback rate change is implemented

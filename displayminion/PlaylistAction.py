@@ -29,8 +29,6 @@ class PlaylistAction(Action):
                 r = x - math.floor(x);
                 self.order.append(contents.pop(math.floor(r * len(contents))))
                 
-            print(self.order)
-            
         self.index = 0
         self.current = None
         self.current_time = self.action['time']
@@ -47,8 +45,6 @@ class PlaylistAction(Action):
                 
                 self.current = MediaAction(new_action, self.current, self.client)
                 self.current.show()
-                
-                print('new playlist media: ', self.current.media['title'])
                 
                 if self.current.media['type'] == 'image':
                     delay = float(self.settings.get('playlist_image_length')) - self.fade_length

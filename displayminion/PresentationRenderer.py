@@ -64,6 +64,4 @@ def presentation_renderer(content, settings, args):
         
         output += insert
     
-    print(content)
-    print(output)
     return output

@@ -46,7 +46,6 @@ class DisplaySource(FloatLayout):
         if self.disp_size[1] > 0:
             to_size[1] = self.disp_size[1]
             
-        print('resizing to', to_size)
         self.child_size = to_size
         self.size = to_size
         self.fbo.size = to_size
@@ -62,8 +61,6 @@ class DisplaySource(FloatLayout):
         
         for s in self.client.sections: s.recalc()
         
-#        self.texture.save('texture-test.png')
-    
     def add_widget(self, *args, **kwargs):
         c = self.canvas
         self.canvas = self.fbo
@@ -75,5 +72,3 @@ class DisplaySource(FloatLayout):
         self.canvas = self.fbo
         super(DisplaySource, self).remove_widget(*args, **kwargs)
         self.canvas = c
-        
-
