@@ -45,7 +45,14 @@ class Section(Widget):
             [-1, 1]
         ]
         
-        after = numpy.array(self.block['points'])
+        # Adjust size of section if edge blending is used
+        points = self.block['points']
+        points[3] = [points[3][0] - (self.block['blend_left'] / 2), points[3][1] + (self.block['blend_top'] / 2)]
+        points[2] = [points[2][0] + (self.block['blend_right'] / 2), points[2][1] + (self.block['blend_top'] / 2)]
+        points[0] = [points[0][0] - (self.block['blend_left'] / 2), points[0][1] - (self.block['blend_bottom'] / 2)]
+        points[1] = [points[1][0] + (self.block['blend_right'] / 2), points[1][1] - (self.block['blend_bottom'] / 2)]
+
+        after = numpy.array(points)
         
         A = []
         for a, b in zip(after, before):
