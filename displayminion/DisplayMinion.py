@@ -166,7 +166,7 @@ class DisplayMinion(App):
         
         if not minion['settings'].get('mediaminion_width', 0) == self.source.disp_size[0] or \
            not minion['settings'].get('mediaminion_height', 0) == self.source.disp_size[1]:
-            self.source.disp_size = (int(minion['settings'].get('mediaminion_width', 0)), int(minion['settings'].get('mediaminion_height', 0)))
+            self.source.disp_size = (int(minion['settings'].get('mediaminion_width') or 0), int(minion['settings'].get('mediaminion_height') or 0))
             self.source.resize()
         
     def update_minion_blocks(self, dt):
@@ -282,6 +282,10 @@ class DisplayMinion(App):
             '_id': '',
             'autoconnect': 'no'
         })
+    
+    def on_touch_down(self, *args, **kwargs):
+        print('touched, saving image')
+        self.source.fbo.texture.save('blah.png')        
         
     def build(self):
         self.title = 'Cedar Display Client'
@@ -294,6 +298,7 @@ class DisplayMinion(App):
         self.source = DisplaySource(self, pos_hint = {'x': 1, 'y': 1}, size_hint = [None, None])
 
         self.layout = FloatLayout()
+        self.layout.on_touch_down = self.on_touch_down
         self.layout.add_widget(self.source)
         
         self.ui = UserInterface(self)

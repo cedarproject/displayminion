@@ -15,11 +15,11 @@ uniform float blend_left;
 uniform float blend_right;
 
 float f (float x) {
-/*    if (x < 0.5) {
+    /*if (x < 0.5) {
         return 0.25 * pow(2.0 * x, 3.0);
     } else {
        return 1.0 - 0.5 * pow(2.0 * (1.0 - x), 3.0);
-    } */
+    }*/
     return x;
 }
 
@@ -36,13 +36,16 @@ void main (void) {
         gl_FragColor[3] *= f(1.0 / (blend_right / ((tex_x + tex_width) - tex_coord0[0])));
     }
     
-    else if (tex_coord0[1] > tex_y && tex_coord0[1] < blend_top + tex_y) {
+    else if (tex_coord0[1] >= tex_y && tex_coord0[1] <= blend_top + tex_y) {
         gl_FragColor[3] *= f(1.0 / (blend_top / (tex_coord0[1] - tex_y)));
     }
     
-    else if (tex_coord0[1] < tex_y + tex_height && tex_coord0[1] > tex_y + tex_height - blend_bottom) {
+    else if (tex_coord0[1] <= tex_y + tex_height && tex_coord0[1] >= tex_y + tex_height - blend_bottom) {
         gl_FragColor[3] *= f(1.0 / (blend_bottom / ((tex_y + tex_height) - tex_coord0[1])));
     }
+    
+//    if (gl_FragColor[3] < 1.0) {gl_FragColor[0] = gl_FragColor[3];}
+//    gl_FragColor[3] = 1.0;
     
     
     // Color adjustment (for luma keying) and gamma correction

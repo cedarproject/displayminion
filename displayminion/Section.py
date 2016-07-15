@@ -30,12 +30,15 @@ class Section(Widget):
     
     def recalc(self, *args, **kwargs):
         w, h = self.source.texture.width, self.source.texture.height
+        
+        sw, sh = self.source.width / self.source.texture.width, self.source.height / self.source.texture.height
+#        sw, sh = 1, 1
 
         self.texture = self.source.texture.get_region(
-            min(self.block['x'] * w, w),
-            min(self.block['y'] * h, h),
-            min(self.block['width'] * w, w),
-            min(self.block['height'] * h, h)
+            sw * min(self.block['x'] * w, w) - (self.block['blend_left'] / 2),
+            sh * min(self.block['y'] * h, h) - (self.block['blend_top'] / 2),
+            sw * min(self.block['width'] * w, w) + (self.block['blend_right'] / 2),
+            sh * min(self.block['height'] * h, h) + (self.block['blend_bottom'] / 2)
         )
         
         before = [
@@ -47,10 +50,10 @@ class Section(Widget):
         
         # Adjust size of section if edge blending is used
         points = self.block['points']
-        points[3] = [points[3][0] - (self.block['blend_left'] / 2), points[3][1] + (self.block['blend_top'] / 2)]
-        points[2] = [points[2][0] + (self.block['blend_right'] / 2), points[2][1] + (self.block['blend_top'] / 2)]
-        points[0] = [points[0][0] - (self.block['blend_left'] / 2), points[0][1] - (self.block['blend_bottom'] / 2)]
-        points[1] = [points[1][0] + (self.block['blend_right'] / 2), points[1][1] - (self.block['blend_bottom'] / 2)]
+        points[3] = [points[3][0] - (self.block['blend_left'] / 2), points[3][1] + (self.block['blend_bottom'] / 2)]
+        points[2] = [points[2][0] + (self.block['blend_right'] / 2), points[2][1] + (self.block['blend_bottom'] / 2)]
+        points[0] = [points[0][0] - (self.block['blend_left'] / 2), points[0][1] - (self.block['blend_top'] / 2)]
+        points[1] = [points[1][0] + (self.block['blend_right'] / 2), points[1][1] - (self.block['blend_top'] / 2)]
 
         after = numpy.array(points)
         
@@ -95,7 +98,7 @@ class Section(Widget):
         self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
         self.canvas['blend_left'] = float(self.block['blend_left'])
         self.canvas['blend_right'] = float(self.block['blend_right'])
-
+        
         self.canvas.clear()
         with self.canvas:
             self.rect = Rectangle(texture = self.texture, size = (2, 2), pos = (-1, -1))

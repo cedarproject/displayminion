@@ -8,7 +8,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.resources import resource_find
 from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
-from kivy.graphics import RenderContext, Fbo, ClearBuffers, ClearColor
+from kivy.graphics import RenderContext, Fbo, ClearBuffers, ClearColor, Color, Rectangle
 
 import time
 
@@ -48,17 +48,19 @@ class DisplaySource(FloatLayout):
             
         self.child_size = to_size
         self.size = to_size
-        self.fbo.size = to_size
+        print(self.size)
 
+        self.fbo.size = Window.size
         self.texture = self.fbo.texture
-        self.texture.min_filter = 'linear'
-        self.texture.mag_filter = 'linear'
-        
-        self.texture.uvsize = (
-            to_size[0] / Window.size[0],
-            to_size[1] / Window.size[1]
-        )
-        
+
+        with self.fbo:
+            Color(0, 0, 0, 1)
+            Rectangle(size = to_size)
+
+        for w in reversed(self.children[:]):
+            self.remove_widget(w)
+            self.add_widget(w)
+
         for s in self.client.sections: s.recalc()
         
     def add_widget(self, *args, **kwargs):
