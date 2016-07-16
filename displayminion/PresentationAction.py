@@ -87,7 +87,8 @@ class PresentationAction(Action):
         self.layout = BoxLayout(
             orientation = ('vertical' if self.image_side in ('top', 'bottom') else 'horizontal'),
             pos = self.pos,
-            size = self.size
+            size = self.size,
+            size_hint = [None, None]
         )
 
         self.layout.opacity = 0
