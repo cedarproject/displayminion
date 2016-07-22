@@ -53,10 +53,6 @@ class DisplaySource(FloatLayout):
         self.fbo.size = Window.size
         self.texture = self.fbo.texture
 
-        with self.fbo:
-            Color(0, 0, 0, 1)
-            Rectangle(size = to_size)
-
         for w in reversed(self.children[:]):
             self.remove_widget(w)
             self.add_widget(w)
