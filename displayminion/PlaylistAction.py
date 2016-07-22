@@ -70,7 +70,7 @@ class PlaylistAction(Action):
     def get_current_widget_index(self):
         if self.current: return self.current.get_current_widget_index()
         
-    def on_show(self, fade_start, fade_end):
+    def on_show(self, fade_length):
         self.shown = True
 
         # If the playlist's start is in the past, determine where in the playlist to skip to.
@@ -96,7 +96,7 @@ class PlaylistAction(Action):
 
         self.next()
         
-    def on_hide(self, fade_start, fade_end):
+    def on_hide(self, fade_length):
         self.current.hide()
         self.current.remove()
 

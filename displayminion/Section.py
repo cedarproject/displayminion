@@ -11,6 +11,7 @@ from kivy.graphics import RenderContext, Fbo, Color, Rectangle, ClearBuffers, Cl
 
 from kivy.core.window import Window
 
+import copy
 import numpy
 
 class Section(Widget):
@@ -29,18 +30,37 @@ class Section(Widget):
         self.recalc()
     
     def recalc(self, *args, **kwargs):
-        w, h = self.source.texture.width, self.source.texture.height
+        block = copy.deepcopy(self.block)
         
+        block['x'] -= block['blend_left'] / 2
+        block['y'] -= block['blend_top'] / 2
+        block['width'] += block['blend_left'] / 2 + block['blend_right'] / 2
+        block['height'] += block['blend_top'] / 2 + block['blend_bottom'] / 2
+        
+        print(block['x'], block['y'], block['width'], block['height'])
+        
+        if block['x'] < 0: block['x'] = 0
+        if block['y'] < 0: block['x'] = 0
+        if block['width'] > 1: block['width'] = 1
+        if block['height'] > 1: block['height'] = 1
+    
+        w, h = self.source.texture.width, self.source.texture.height
         sw, sh = self.source.width / self.source.texture.width, self.source.height / self.source.texture.height
-#        sw, sh = 1, 1
+
+#        self.texture = self.source.texture.get_region(
+#            sw * min(block['x'] * w, w) - (block['blend_left'] * w / 2),
+#            sh * min(block['y'] * h, h) - (block['blend_top'] * h / 2),
+#            sw * min(block['width'] * w, w) + (block['blend_right'] * w / 2),
+#            sh * min(block['height'] * h, h) + (block['blend_bottom'] * h / 2)
+#        )
 
         self.texture = self.source.texture.get_region(
-            sw * min(self.block['x'] * w, w) - (self.block['blend_left'] / 2),
-            sh * min(self.block['y'] * h, h) - (self.block['blend_top'] / 2),
-            sw * min(self.block['width'] * w, w) + (self.block['blend_right'] / 2),
-            sh * min(self.block['height'] * h, h) + (self.block['blend_bottom'] / 2)
+            sw * min(block['x'] * w, w),
+            sh * min(block['y'] * h, h),
+            sw * min(block['width'] * w, w),
+            sh * min(block['height'] * h, h)
         )
-        
+                          
         before = [
             [-1, -1],
             [1, -1],
@@ -49,11 +69,11 @@ class Section(Widget):
         ]
         
         # Adjust size of section if edge blending is used
-        points = self.block['points']
-        points[3] = [points[3][0] - (self.block['blend_left'] / 2), points[3][1] + (self.block['blend_bottom'] / 2)]
-        points[2] = [points[2][0] + (self.block['blend_right'] / 2), points[2][1] + (self.block['blend_bottom'] / 2)]
-        points[0] = [points[0][0] - (self.block['blend_left'] / 2), points[0][1] - (self.block['blend_top'] / 2)]
-        points[1] = [points[1][0] + (self.block['blend_right'] / 2), points[1][1] - (self.block['blend_top'] / 2)]
+        points = block['points']
+        points[3] = [points[3][0] - block['blend_left'], points[3][1] + block['blend_bottom']]
+        points[2] = [points[2][0] + block['blend_right'], points[2][1] + block['blend_bottom']]
+        points[0] = [points[0][0] - block['blend_left'], points[0][1] - block['blend_top']]
+        points[1] = [points[1][0] + block['blend_right'], points[1][1] - block['blend_top']]
 
         after = numpy.array(points)
         
@@ -68,7 +88,7 @@ class Section(Widget):
                                 
         A = numpy.array(A)
 
-        B = numpy.array([[c for p in self.block['points'] for c in p]])
+        B = numpy.array([[c for p in block['points'] for c in p]])
         B = B.transpose()
 
         m = numpy.dot(numpy.linalg.inv(A), B)
@@ -85,19 +105,19 @@ class Section(Widget):
         
         self.canvas['uTransformMatrix'] = matrix
 
-        self.canvas['brightness'] = float(self.block.get('brightness', 1))
-        self.canvas['alpha_mask'] = int(self.block.get('alpha_mask', False)) # Because Kivy can't pass booleans to shaders, apparently.
+        self.canvas['brightness'] = float(block.get('brightness', 1))
+        self.canvas['alpha_mask'] = int(block.get('alpha_mask', False)) # Because Kivy can't pass booleans to shaders, apparently.
         self.canvas['adjust'] = float(self.client.minion['settings'].get('displayminion_color_adjust_range', 0))
+
+        self.canvas['tex_x'] = block['x']
+        self.canvas['tex_y'] = block['y']
+        self.canvas['tex_width'] = block['width']
+        self.canvas['tex_height'] = block['height']
         
-        self.canvas['tex_x'] = self.block['x']
-        self.canvas['tex_y'] = self.block['y']
-        self.canvas['tex_width'] = self.block['width']
-        self.canvas['tex_height'] = self.block['height']
-        
-        self.canvas['blend_top'] = float(self.block['blend_top'])
-        self.canvas['blend_bottom'] = float(self.block['blend_bottom'])
-        self.canvas['blend_left'] = float(self.block['blend_left'])
-        self.canvas['blend_right'] = float(self.block['blend_right'])
+        self.canvas['blend_top'] = float(block['blend_top'])
+        self.canvas['blend_bottom'] = float(block['blend_bottom'])
+        self.canvas['blend_left'] = float(block['blend_left'])
+        self.canvas['blend_right'] = float(block['blend_right'])
         
         self.canvas.clear()
         with self.canvas:

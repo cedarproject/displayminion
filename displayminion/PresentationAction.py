@@ -15,7 +15,6 @@ import urllib.parse
 from .PresentationRenderer import presentation_renderer
 
 from .Action import Action
-from .Fade import Fade
 
 class PresentationAction(Action):
     def __init__(self, *args, **kwargs):
@@ -132,14 +131,8 @@ class PresentationAction(Action):
     def get_current_widget_index(self):
         if self.shown and not self.blank:            
             return max(self.client.source.children.index(self.bg), self.client.source.children.index(self.layout))
-            
-    def fade_tick(self, val):
-        self.fade_val = val
         
-        self.bg.canvas.opacity = val
-        self.layout.opacity = val
-        
-    def fade_out_end(self):
+    def out_animation_end(self):
         self.shown = False
         
         self.client.remove_widget(self.bg)
@@ -156,10 +149,13 @@ class PresentationAction(Action):
 
         return True
         
-    def on_show(self, fade_start, fade_end):
+    def on_show(self, fade_length):
         if not self.blank:
             self.client.add_layer_widget(self.bg, self.layer)
+            self.add_anim_widget(self.bg.canvas, 'opacity', 1, 0)
+
             self.client.add_layer_widget(self.layout, self.layer)
+            self.add_anim_widget(self.layout, 'opacity', 1, 0)
             
             if self.image_side in ('top', 'left'):
                 if self.image_layout: self.layout.add_widget(self.image_layout)
@@ -168,10 +164,8 @@ class PresentationAction(Action):
                 if self.label: self.layout.add_widget(self.label)
                 if self.image_layout: self.layout.add_widget(self.image_layout)
             
-            if self.fade: self.fade.stop()
-            self.fade = Fade(self.client.time, self.fade_val, 1, fade_start, fade_end, self.fade_tick, None)
+            self.do_in_animation(fade_length)
             
-    def on_hide(self, fade_start, fade_end):
+    def on_hide(self, fade_length):
         if not self.blank:
-            if self.fade: self.fade.stop()
-            self.fade = Fade(self.client.time, self.fade_val, 0, fade_start, fade_end, self.fade_tick, self.fade_out_end)
+            self.do_out_animation(fade_length)

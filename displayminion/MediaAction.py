@@ -8,10 +8,7 @@ from kivy.uix.video import Video
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 from kivy.graphics import RenderContext, Fbo, Color, Rectangle
 
-from kivy.uix.label import Label
-
 from .Action import Action
-from .Fade import Fade
 
 import urllib.parse
 
@@ -28,7 +25,6 @@ class MediaAction(Action):
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'), self.media.get('settings'), self.action.get('settings'))
         
         self.fade_length = float(self.settings.get('media_fade'))
-        self.fade_val = 0
         
         self.max_volume = min(float(self.settings.get('media_volume')), 1.0)
         self.minion_volume = min(float(self.settings.get('mediaminion_volume')), 1.0)
@@ -117,21 +113,8 @@ class MediaAction(Action):
             
             # Automatic sync disabled until Kivy playback rate change is implemented
             #Clock.schedule_once(self.media_sync, media_sync_interval)
-            
-    def fade_tick(self, val):
-        self.fade_val = val
-
-        if self.video:
-            self.video.opacity = val
-            self.video.volume = val * self.max_volume * self.minion_volume
-
-        elif self.audio:
-            self.audio.volume = val * self.max_volume * self.minion_volume
-            
-        elif self.image:
-            self.image.opacity = val
         
-    def fade_out_end(self):
+    def out_animation_end(self):
         self.shown = False
         
         if self.video:
@@ -155,22 +138,24 @@ class MediaAction(Action):
             elif self.image and self.image._coreimage.loaded:
                 return True
         
-    def on_show(self, fade_start, fade_end):
+    def on_show(self, fade_length):
         self.media_sync()
 
         if self.video:
             self.video.state = 'play'
             self.client.add_layer_widget(self.video, self.layer)
+            self.add_anim_widget(self.video, 'opacity', 1, 0)
+            self.add_anim_widget(self.video, 'volume', self.max_volume * self.minion_volume, 0)
             
         elif self.audio:
             self.audio.play()
+            self.add_anim_widget(self.audio, 'volume', self.max_volume * self.minion_volume, 0)
             
         elif self.image:
             self.client.add_layer_widget(self.image, self.layer)
-            
-        if self.fade: self.fade.stop()
-        self.fade = Fade(self.client.time, self.fade_val, 1, fade_start, fade_end, self.fade_tick, None)
+            self.add_anim_widget(self.image, 'opacity', 1, 0)
+              
+        self.do_in_animation(fade_length)
         
-    def on_hide(self, fade_start, fade_end):
-        if self.fade: self.fade.stop()
-        self.fade = Fade(self.client.time, self.fade_val, 0, fade_start, fade_end, self.fade_tick, self.fade_out_end)
+    def on_hide(self, fade_length):
+        self.do_out_animation(fade_length)

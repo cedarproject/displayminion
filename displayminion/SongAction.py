@@ -4,7 +4,6 @@ from kivy.graphics import Color, Rectangle
 import re
 
 from .Action import Action
-from .Fade import Fade
 
 class SongAction(Action):
     def __init__(self, *args, **kwargs):
@@ -16,7 +15,6 @@ class SongAction(Action):
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'), self.song.get('settings'), self.action.get('settings'))
         
         self.fade_length = float(self.settings.get('songs_fade'))
-        self.fade_val = 0
         
         self.blank = False
         if not self.args.__contains__('section'):
@@ -89,23 +87,18 @@ class SongAction(Action):
     def get_current_widget_index(self):
         if self.shown and not self.blank:
             return self.client.source.children.index(self.label)
-            
-    def fade_tick(self, val):
-        self.fade_val = val
-        self.label.opacity = val
         
-    def fade_out_end(self):
+    def out_animation_end(self):
         self.shown = False
         self.client.remove_widget(self.label)
         
-    def on_show(self, fade_start, fade_end):
+    def on_show(self, fade_length):
         if not self.blank:
             self.client.add_layer_widget(self.label, self.layer)
+            self.add_anim_widget(self.label, 'opacity', 1, 0)
             
-            if self.fade: self.fade.stop()
-            self.fade = Fade(self.client.time, self.fade_val, 1, fade_start, fade_end, self.fade_tick, None)
+            self.do_in_animation(fade_length)
             
-    def on_hide(self, fade_start, fade_end):
+    def on_hide(self, fade_length):
         if not self.blank:
-            if self.fade: self.fade.stop()
-            self.fade = Fade(self.client.time, self.fade_val, 0, fade_start, fade_end, self.fade_tick, self.fade_out_end)
+            self.do_out_animation(fade_length)
