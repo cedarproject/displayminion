@@ -32,30 +32,39 @@ class PresentationAction(Action):
             
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'),
             self.presentation.get('settings'), self.slide.get('settings'), self.action.get('settings'))
+
+        mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
+
+        self.image_side = self.settings.get('presentations_image_side')
         
         self.fade_length = float(self.settings.get('presentations_fade', 0.25))
         self.fade_val = 0
-        
-        try:
-            self.text = presentation_renderer(self.slide['content'], self.settings, self.args).strip()
-        except:
-            print(sys.exc_info()[0])
+                
+        if self.presentation.get('imported'):
             self.text = ''
-        
-        mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
 
-        self.imageids = self.slide.get('images', [])
-        self.images = []
-        
-        self.image_side = self.settings.get('presentations_image_side')
-
-        for _id in self.imageids:
-            m = self.meteor.find_one('media', selector = {'_id': _id})
-            url = 'http://{}{}'.format(self.client.server, urllib.parse.quote(mediaurl + m['location']))
-
+            url = 'http://{}{}'.format(self.client.server, urllib.parse.quote(mediaurl + '/' + self.slide['imagepath']))
             i = AsyncImage(source = url)
             i.allow_stretch = True
-            self.images.append(i)
+            self.images = [i]
+        
+        else:
+            try:
+                self.text = presentation_renderer(self.slide['content'], self.settings, self.args).strip()
+            except:
+                print(sys.exc_info()[0])
+                self.text = ''
+
+            self.imageids = self.slide.get('images', [])
+            self.images = []
+            
+            for _id in self.imageids:
+                m = self.meteor.find_one('media', selector = {'_id': _id})
+                url = 'http://{}{}'.format(self.client.server, urllib.parse.quote(mediaurl + m['location']))
+
+                i = AsyncImage(source = url)
+                i.allow_stretch = True
+                self.images.append(i)
         
         self.size_hint = [
             float(self.settings.get('presentations_width')) * 0.01,
