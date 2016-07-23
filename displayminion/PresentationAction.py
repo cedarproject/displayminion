@@ -129,7 +129,8 @@ class PresentationAction(Action):
                 font_size = round(float(self.settings.get('presentations_font_size'))),
                 color = self.settings.get('presentations_font_color'),
                 outline_width = self.settings.get('presentations_font_outline'),
-                outline_color = self.settings.get('presentations_font_outline_color')
+                outline_color = self.settings.get('presentations_font_outline_color'),
+                unicode_errors = 'ignore'
             )
             
         if self.images:

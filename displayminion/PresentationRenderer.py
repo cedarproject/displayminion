@@ -64,4 +64,5 @@ def presentation_renderer(content, settings, args):
         
         output += insert
     
+    output = output.replace(u'\xa0', u' ')
     return output
