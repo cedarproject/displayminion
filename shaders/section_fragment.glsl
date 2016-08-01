@@ -14,14 +14,14 @@ uniform float blend_bottom;
 uniform float blend_left;
 uniform float blend_right;
 
-float powv = 2;
+// float powv = 2.0;
 
 float f (float x) {
-    if (x < 0.5) {
+/*    if (x < 0.5) {
         return 0.25 * pow(2.0 * x, powv);
     } else {
        return 1.0 - 0.5 * pow(2.0 * (1.0 - x), powv);
-    }
+    } */
     return x;
 }
 
