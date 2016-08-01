@@ -41,6 +41,7 @@ class DisplayMinion(App):
         'playlist': PlaylistAction,
         'song': SongAction,
         'presentation': PresentationAction,
+        'presentationslide': PresentationAction,
         'timer': TimerAction,
         'clear-layer': Action
     }

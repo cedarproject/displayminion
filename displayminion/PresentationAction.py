@@ -20,15 +20,21 @@ class PresentationAction(Action):
     def __init__(self, *args, **kwargs):
         super(PresentationAction, self).__init__(*args, **kwargs)
         
-        self.presentation = self.meteor.find_one('presentations', selector = {'_id': self.action['presentation']})
+        if self.action['type'] == 'presentation':
+            self.presentation = self.meteor.find_one('presentations', selector = {'_id': self.action['presentation']})
 
-        self.blank = False
-        if not self.args.__contains__('order'):
-            self.blank = True
-            return
+            self.blank = False
+            if not self.args.__contains__('order'):
+                self.blank = True
+                return
 
-        self.slide = self.meteor.find_one('presentationslides',
-            selector = {'presentation': self.presentation['_id'], 'order': self.args['order']})
+            self.slide = self.meteor.find_one('presentationslides',
+                selector = {'presentation': self.presentation['_id'], 'order': self.args['order']})
+        
+        elif self.action['type'] == 'presentationslide':
+            self.slide = self.meteor.find_one('presentationslides', selector = {'_id': self.action['presentationslide']})
+            self.presentation = self.meteor.find_one('presentations', selector = {'_id': self.slide['presentation']})
+            self.blank = False
             
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'),
             self.presentation.get('settings'), self.slide.get('settings'), self.action.get('settings'))
