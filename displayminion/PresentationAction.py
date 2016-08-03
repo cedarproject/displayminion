@@ -38,7 +38,7 @@ class PresentationAction(Action):
             
         self.settings = self.combine_settings(self.settings, self.client.minion.get('settings'),
             self.presentation.get('settings'), self.slide.get('settings'), self.action.get('settings'))
-
+        
         mediaurl = self.meteor.find_one('settings', selector={'key': 'mediaurl'})['value']
 
         self.image_side = self.settings.get('presentations_image_side')
@@ -58,7 +58,7 @@ class PresentationAction(Action):
             try:
                 self.text = presentation_renderer(self.slide['content'], self.settings, self.args).strip()
             except:
-                print(sys.exc_info()[0])
+                print('error rendering presentation to markup', sys.exc_info()[0])
                 self.text = ''
 
             self.imageids = self.slide.get('images', [])
@@ -124,6 +124,9 @@ class PresentationAction(Action):
                 self.text_size[0] /= 2.0
             elif self.images:
                 self.text_size[1] /= 2.0
+            
+            self.text_size[0] -= int(self.settings.get('presentations_text_margin_horizontal')) * 2
+            self.text_size[1] -= int(self.settings.get('presentations_text_margin_vertical')) * 2
 
             self.label = Label(
                 text = self.text,
