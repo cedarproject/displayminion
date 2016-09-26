@@ -59,6 +59,8 @@ class DisplayMinion(App):
         self.sections = []
         self.last_blocks = None
         
+        self.fullscreen = False
+        
         self.defaults = json.load(open('common/default_settings.json'))
         
         super(DisplayMinion, self).__init__(**kwargs)
@@ -283,7 +285,12 @@ class DisplayMinion(App):
             '_id': '',
             'autoconnect': 'no'
         })
-           
+   
+    def toggle_fullscreen(self, *args, **kwargs):
+        print('toggle?')
+        if self.fullscreen: Window.fullscreen = 0
+        else: Window.fullscreen = 'auto'
+        self.fullscreen = not self.fullscreen
         
     def build(self):
         self.title = 'Cedar Display Client'
@@ -297,6 +304,8 @@ class DisplayMinion(App):
 
         self.layout = FloatLayout()
         self.layout.add_widget(self.source)
+        
+        self.layout.bind(on_touch_down = self.toggle_fullscreen)
         
         self.ui = UserInterface(self)
         
