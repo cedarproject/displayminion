@@ -301,12 +301,11 @@ class DisplayMinion(App):
             self.icon = 'logo/logo-1024x1024.png'
 
         self.source = DisplaySource(self, pos_hint = {'x': 1, 'y': 1}, size_hint = [None, None])
+        self.source.bind(on_touch_down = self.toggle_fullscreen)
 
         self.layout = FloatLayout()
         self.layout.add_widget(self.source)
-        
-        self.layout.bind(on_touch_down = self.toggle_fullscreen)
-        
+                
         self.ui = UserInterface(self)
         
         return self.layout
