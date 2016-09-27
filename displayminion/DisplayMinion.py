@@ -286,11 +286,11 @@ class DisplayMinion(App):
             'autoconnect': 'no'
         })
    
-    def toggle_fullscreen(self, *args, **kwargs):
-        print('toggle?')
-        if self.fullscreen: Window.fullscreen = 0
-        else: Window.fullscreen = 'auto'
-        self.fullscreen = not self.fullscreen
+    def toggle_fullscreen(self, thing, touch):        
+        if not self.ui.layout.collide_point(*touch.pos):
+            if self.fullscreen: Window.fullscreen = 0
+            else: Window.fullscreen = 'auto'
+            self.fullscreen = not self.fullscreen
         
     def build(self):
         self.title = 'Cedar Display Client'
