@@ -1,3 +1,6 @@
+import os
+os.environ['SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS'] = '0' # Tells SDL2 not to hide the window when unfocused while fullscreen.
+
 import kivy
 kivy.require('1.9.0')
 
