@@ -35,8 +35,8 @@ from .PlaylistAction import PlaylistAction
 from .SongAction import SongAction
 from .PresentationAction import PresentationAction
 from .TimerAction import TimerAction
+from .CameraAction import CameraAction
 
-# TODO implement stuff from https://kivy.org/planet/2011/05/kivy-window-management-on-x11/ to make window fullscreen, optionally on multiple monitors
 
 class DisplayMinion(App):
     action_map = {
@@ -46,6 +46,7 @@ class DisplayMinion(App):
         'presentation': PresentationAction,
         'presentationslide': PresentationAction,
         'timer': TimerAction,
+        'camera': CameraAction,
         'clear-layer': Action
     }
     
@@ -113,7 +114,6 @@ class DisplayMinion(App):
                            'songs', 'songarrangements', 'songsections',
                            'presentations', 'presentationslides']:
 
-            #TODO add all subscriptions
             self.collections += 1
             self.meteor.subscribe(collection, callback=self.subscription_ready)
 
@@ -176,7 +176,7 @@ class DisplayMinion(App):
             self.source.resize()
         
     def update_minion_blocks(self, dt):
-        # Note: Sections were originally named "blocks", so far I've been to lazy to rewrite all the cedarserver code to reflect the new name. -IHS
+        # Note: Sections were originally named "blocks", so far I've been too lazy to rewrite all the cedarserver code to reflect the new name. -IHS
         start_length = len(self.sections)
         block_delta = len(self.minion['settings']['blocks']) - start_length
 
@@ -231,6 +231,7 @@ class DisplayMinion(App):
             
             if action and self.action_map.get(action['type']):
                 self.layers[layer] = self.action_map[action['type']](action, self.layers.get(layer) or None, self)
+
                 self.layers[layer].show()
                 
             elif action == None and self.layers.get(layer):

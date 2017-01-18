@@ -5,8 +5,6 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.uix.image import AsyncImage
 from kivy.uix.video import Video
-from kivy.properties import StringProperty, ObjectProperty, ListProperty
-from kivy.graphics import RenderContext, Fbo, Color, Rectangle
 
 from .Action import Action
 
