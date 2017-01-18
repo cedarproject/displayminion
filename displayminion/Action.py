@@ -28,6 +28,8 @@ class Action:
         
         self.anim_widgets = []
         self.anims_ended = 0
+        
+        self.show_schedule_handle = None
     
     def add_anim_widget(self, widget, prop, vin, vout):
         self.anim_widgets.append((widget, prop, vin, vout))
@@ -93,6 +95,8 @@ class Action:
             self.old_action = None
                 
     def show(self):
+        self.show_schedule_handle = None
+
         self.ready = self.check_ready()
 
         if self.ready:
@@ -105,12 +109,14 @@ class Action:
             if self.old_action and self.time.now() - self.action['time'] > fade_old_max_wait:
                 self.remove_old()
                 
-            Clock.schedule_once(lambda dt: self.show(), 0)
+            self.show_schedule_handle = Clock.schedule_once(lambda dt: self.show(), 0)
             
     def on_show(self, duration):
         pass
     
     def hide(self, duration = None):
+        if self.show_schedule_handle: self.show_schedule_handle.cancel()
+        
         if self.shown:
             if duration == None: duration = self.get_fade_duration()
             self.on_hide(duration)
