@@ -10,6 +10,8 @@ from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 from kivy.graphics import RenderContext, Fbo, ClearBuffers, ClearColor, Color, Rectangle
 
+from .GStreamerOutput import GStreamerOutput
+
 import time
 
 class DisplaySource(FloatLayout):
@@ -32,7 +34,12 @@ class DisplaySource(FloatLayout):
             
         self.texture = self.fbo.texture
         
+        self.output = GStreamerOutput(self.texture)
+        
         Window.bind(on_resize = self.resize)
+
+    def stop(self):
+        self.output.stop()
         
     def resize(self, *args):
         # Ensures resize is called from the correct thread
@@ -48,10 +55,11 @@ class DisplaySource(FloatLayout):
             
         self.child_size = to_size
         self.size = to_size
-        print(self.size)
 
         self.fbo.size = Window.size
         self.texture = self.fbo.texture
+        
+        self.output.new_texture(self.texture)
 
         for w in reversed(self.children[:]):
             self.remove_widget(w)

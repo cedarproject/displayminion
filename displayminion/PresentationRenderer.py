@@ -1,6 +1,8 @@
-# Render Quill's intermediate format into Kivy's obscure BBcode-ish markup (https://kivy.org/docs/api-kivy.uix.label.html#markup-text)
+# Render Quill's intermediate format into Pango's markup language (http://http://www.pygtk.org/pygtk2reference/pango-markup-language.html)
 
 # TODO implement fill-in-the-blank lookahead/behind for lists, continuation for multi-style strings
+
+# TODO make this return a list of Pango Layouts
 def presentation_renderer(content, settings, args):
     output = ''
 

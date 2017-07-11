@@ -35,8 +35,7 @@ from .PlaylistAction import PlaylistAction
 from .SongAction import SongAction
 from .PresentationAction import PresentationAction
 from .TimerAction import TimerAction
-from .CameraAction import CameraAction
-
+from .GStreamerAction import GStreamerAction
 
 class DisplayMinion(App):
     action_map = {
@@ -46,7 +45,7 @@ class DisplayMinion(App):
         'presentation': PresentationAction,
         'presentationslide': PresentationAction,
         'timer': TimerAction,
-        'camera': CameraAction,
+        'camera': GStreamerAction,
         'clear-layer': Action
     }
     
@@ -295,6 +294,9 @@ class DisplayMinion(App):
             if self.fullscreen: Window.fullscreen = 0
             else: Window.fullscreen = 'auto'
             self.fullscreen = not self.fullscreen
+    
+    def on_stop(self):
+        self.source.stop()
         
     def build(self):
         self.title = 'Cedar Display Client'
