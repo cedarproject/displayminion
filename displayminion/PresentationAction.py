@@ -1,21 +1,16 @@
-from kivy.core.image import Image as CoreImage
-from kivy.uix.image import Image, AsyncImage
+from kivy.uix.label import Label
+from kivy.uix.image import AsyncImage
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.graphics import Color, Rectangle
 
+#from kivy.loader import Loader
+#Loader.loading_image = ''
+
 import sys
 import math
 import urllib.parse
-import io
-import gi
-import cairo
-
-gi.require_version('Pango', '1.0')
-gi.require_version('PangoCairo', '1.0')
-
-from gi.repository import Pango, PangoCairo
 
 from .PresentationRenderer import presentation_renderer
 
@@ -60,8 +55,11 @@ class PresentationAction(Action):
             self.images = [i]
         
         else:
-            self.text = self.slide['content']
-            self.has_text = True # TODO add text-finding logic!
+            try:
+                self.text = presentation_renderer(self.slide['content'], self.settings, self.args).strip()
+            except:
+                print('error rendering presentation to markup', sys.exc_info()[0])
+                self.text = ''
 
             self.imageids = self.slide.get('images', [])
             self.images = []
@@ -120,7 +118,7 @@ class PresentationAction(Action):
         self.label = None
         self.image_layout = None
 
-        if self.has_text:
+        if self.text:
             self.text_size = list(self.size)
             if self.images and self.image_side in ('left', 'right'):
                 self.text_size[0] /= 2.0
@@ -130,35 +128,19 @@ class PresentationAction(Action):
             self.text_size[0] -= int(self.settings.get('presentations_text_margin_horizontal')) * 2
             self.text_size[1] -= int(self.settings.get('presentations_text_margin_vertical')) * 2
 
-            surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, 320, 120)
-            context = cairo.Context(surf)
-            context.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-            pangocairo_context = PangoCairo.create_context(context)
-
-            layout = Pango.Layout.new(pangocairo_context)
-            fontname = "Code Pro LC"
-            font = Pango.FontDescription(fontname + " 25")
-            layout.set_font_description(font)
-
-            layout.set_text(u"Hello World\nHello World 2\nHello World 3\n\n\nBlah", -1)
-            context.set_source_rgb(255, 255, 255)
-            PangoCairo.update_layout(context, layout)
-            PangoCairo.show_layout(context, layout)
-
-#            layout2 = Pango.Layout.new(pangocairo_context)
-#            layout2.set_font_description(font)
-            
-#            layout2.set_text(u"Hello World 2", -1)
-#            context.set_source_rgb(255, 255, 255)
-#            PangoCairo.update_layout(context, layout2)
-#            PangoCairo.show_layout(context, layout2)
-
-            imagefile = io.BytesIO()
-            surf.write_to_png(imagefile)         
-            imagefile.seek(0)
-            imagedata = CoreImage(imagefile, ext = 'png')
-            
-            self.label = Image(texture = imagedata.texture)
+            self.label = Label(
+                text = self.text,
+                text_size = self.text_size,
+                markup = True,
+                halign = self.settings.get('presentations_align_horizontal'),
+                valign = self.settings.get('presentations_align_vertical'),
+                font_name = self.settings.get('presentations_font'),
+                font_size = round(float(self.settings.get('presentations_font_size'))),
+                color = self.settings.get('presentations_font_color'),
+                outline_width = self.settings.get('presentations_font_outline'),
+                outline_color = self.settings.get('presentations_font_outline_color'),
+                unicode_errors = 'ignore'
+            )
             
         if self.images:
             rows = round(math.sqrt(len(self.images)))
