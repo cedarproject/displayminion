@@ -286,7 +286,11 @@ class DisplayMinion(App):
         config.setdefaults('connection', {
             'server': 'localhost:3000',
             '_id': '',
-            'autoconnect': 'no'
+            'autoconnect': 'no',
+        })
+        
+        config.setdefaults('window', {
+            'fullscreen': 'no'
         })
    
     def toggle_fullscreen(self, thing, touch):        
@@ -300,6 +304,9 @@ class DisplayMinion(App):
         
     def build(self):
         self.title = 'Cedar Display Client'
+        
+        if self.config.get('window', 'fullscreen') == 'yes':
+            Window.fullscreen = 'auto'
         
         if kivy.utils.platform is 'windows':
             self.icon = 'logo/logo-128x128.png'
