@@ -292,6 +292,10 @@ class DisplayMinion(App):
         config.setdefaults('window', {
             'fullscreen': 'no'
         })
+        
+        config.setdefaults('outputs', {
+            'shmsink': 'no'
+        })
    
     def toggle_fullscreen(self, thing, touch):        
         if not self.ui.layout.collide_point(*touch.pos):

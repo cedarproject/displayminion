@@ -3,14 +3,14 @@ min_resize_time = 0.5
 import kivy
 kivy.require('1.9.0')
 
+from kivy.config import Config
+
 from kivy.clock import Clock
 from kivy.uix.floatlayout import FloatLayout
 from kivy.resources import resource_find
 from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 from kivy.graphics import RenderContext, Fbo, ClearBuffers, ClearColor, Color, Rectangle
-
-from .GStreamerOutput import GStreamerOutput
 
 import time
 
@@ -34,12 +34,16 @@ class DisplaySource(FloatLayout):
             
         self.texture = self.fbo.texture
         
-        self.output = GStreamerOutput(self.texture)
+        if self.client.config.get('outputs', 'shmsink') == 'yes':
+            from .GStreamerOutput import GStreamerOutput
+            self.shmsinkoutput = GStreamerOutput(self.texture)
+        else:
+            self.shmsinkoutput = False
         
         Window.bind(on_resize = self.resize)
 
     def stop(self):
-        self.output.stop()
+        if self.shmsinkoutput: self.shmsinkoutput.stop()
         
     def resize(self, *args):
         # Ensures resize is called from the correct thread
@@ -59,7 +63,7 @@ class DisplaySource(FloatLayout):
         self.fbo.size = Window.size
         self.texture = self.fbo.texture
         
-        self.output.new_texture(self.texture)
+        if self.shmsinkoutput: self.shmsinkoutput.new_texture(self.texture)
 
         for w in reversed(self.children[:]):
             self.remove_widget(w)
