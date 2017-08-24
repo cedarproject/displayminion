@@ -118,9 +118,11 @@ class MediaAction(Action):
         if self.video:
             self.video.state = 'pause'
             self.client.remove_widget(self.video)
+            self.video.unload()
 
         elif self.audio:
             self.audio.stop()
+            self.audio.unload()
 
         elif self.image:
             self.client.remove_widget(self.image)

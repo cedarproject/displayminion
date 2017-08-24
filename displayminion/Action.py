@@ -117,9 +117,8 @@ class Action:
     def hide(self, duration = None):
         if self.show_schedule_handle: self.show_schedule_handle.cancel()
         
-        if self.shown:
-            if duration == None: duration = self.get_fade_duration()
-            self.on_hide(duration)
+        if duration == None: duration = self.get_fade_duration()
+        self.on_hide(duration)
             
     def on_hide(self, duration):
         self.shown = False
