@@ -74,7 +74,7 @@ class SongAction(Action):
             font_name = self.settings.get('songs_font'), 
             font_size = float(self.settings.get('songs_font_size')),
             color = self.settings.get('songs_font_color'),
-            outline_width = self.settings.get('songs_font_outline'),
+            outline_width = int(self.settings.get('songs_font_outline')),
             outline_color = self.settings.get('songs_font_outline_color')
         )
         
